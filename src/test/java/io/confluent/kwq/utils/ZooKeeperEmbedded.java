@@ -1,6 +1,5 @@
-package io.confluent.kwq.utils;
 /**
- * Copyright 2017 Confluent Inc.
+ * Copyright 2018 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +13,7 @@ package io.confluent.kwq.utils;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+package io.confluent.kwq.utils;
 
 import org.slf4j.Logger;
 import org.apache.curator.test.TestingServer;
@@ -26,7 +26,7 @@ import java.io.IOException;
  *
  * The ZooKeeper server instance is automatically started when you create a new instance of this class.
  */
-public class ZooKeeperEmbedded {
+class ZooKeeperEmbedded {
 
   private static final Logger log = LoggerFactory.getLogger(ZooKeeperEmbedded.class);
 
@@ -35,7 +35,6 @@ public class ZooKeeperEmbedded {
   /**
    * Creates and starts a ZooKeeper instance.
    *
-   * @throws Exception
    */
   public ZooKeeperEmbedded() throws Exception {
     log.debug("Starting embedded ZooKeeper server...");

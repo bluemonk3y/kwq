@@ -1,3 +1,18 @@
+/**
+ * Copyright 2018 Confluent Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package io.confluent.kwq;
 
 import io.confluent.kwq.utils.IntegrationTestHarness;
@@ -33,16 +48,14 @@ public class ReadWriteTest {
 
     testHarness.createTopic("TEST", 1, 1);
 
-    TaskDataProvider taskDataProvider = new TaskDataProvider();
 
-
-    testHarness.produceData("TEST", taskDataProvider.data, new TaskSerDes(), System.currentTimeMillis());
+    testHarness.produceData("TEST", TaskDataProvider.data, new TaskSerDes(), System.currentTimeMillis());
 
     Map<String, Task> results = testHarness.consumeData("TEST", 1, new StringDeserializer(), new TaskSerDes(), 1000);
 
     for (Map.Entry<String, Task> stringGenericRowEntry : results.entrySet()) {
       System.out.println(stringGenericRowEntry.getValue());
     }
-    Assert.assertEquals(taskDataProvider.data.size(), results.size());
+    Assert.assertEquals(TaskDataProvider.data.size(), results.size());
   }
 }

@@ -1,3 +1,18 @@
+/**
+ * Copyright 2018 Confluent Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package io.confluent.kwq.utils;
 
 import io.confluent.common.utils.TestUtils;
@@ -28,9 +43,8 @@ import java.util.concurrent.TimeoutException;
 
 public class IntegrationTestHarness {
 
-  public static final long TEST_RECORD_FUTURE_TIMEOUT_MS = 5000;
-  private static final long RESULTS_EXTRA_POLL_TIME_MS = 5000;
-  private String CONSUMER_GROUP_ID_PREFIX  = "KWQ-test";
+  private static final long TEST_RECORD_FUTURE_TIMEOUT_MS = 5000;
+  private final String CONSUMER_GROUP_ID_PREFIX  = "KWQ-test";
 
   public EmbeddedSingleNodeKafkaCluster embeddedKafkaCluster;
   private KsqlConfig ksqlConfig;
@@ -136,14 +150,11 @@ public class IntegrationTestHarness {
             valueDeserializer)) {
 
       consumer.subscribe(Collections.singleton(topic));
-//      long pollStart = System.currentTimeMillis();
-//      long pollEnd = pollStart + resultsPollMaxTimeMs;
 
       Map<K, V> result = new HashMap<>();
 
       int waitCount = 0;
       while (result.size() < expectedNumMessages && waitCount++ < 5) {
-//      while (System.currentTimeMillis() < pollEnd && continueConsuming(result.size(), expectedNumMessages)) {
         for (ConsumerRecord<K, V> record : consumer.poll(resultsPollMaxTimeMs)) {
           if (record.value() != null) {
             result.put(record.key(), record.value());

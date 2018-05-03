@@ -1,3 +1,18 @@
+/**
+ * Copyright 2018 Confluent Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package io.confluent.kwq;
 
 import io.confluent.kwq.utils.IntegrationTestHarness;
@@ -38,7 +53,7 @@ public class SimpleKwqTaskPriorityTest {
     Map<String, Task> testData = TaskDataProvider.data;
 
     for (Map.Entry<String, Task> stringTaskEntry : testData.entrySet()) {
-      testHarness.produceData("KWQ-" + stringTaskEntry.getKey(), Collections.singletonMap(stringTaskEntry.getKey(), stringTaskEntry.getValue()), new TaskSerDes(), 1l );
+      testHarness.produceData("KWQ-" + stringTaskEntry.getKey(), Collections.singletonMap(stringTaskEntry.getKey(), stringTaskEntry.getValue()), new TaskSerDes(), 1L);
     }
 
     Task first = kwq.consume();
@@ -51,7 +66,7 @@ public class SimpleKwqTaskPriorityTest {
 
     Task firstItem = TaskDataProvider.data.values().iterator().next();
 
-    testHarness.produceData("KWQ-9", Collections.singletonMap(firstItem.getId(), firstItem), new TaskSerDes(), 1l );
+    testHarness.produceData("KWQ-5", Collections.singletonMap(firstItem.getId(), firstItem), new TaskSerDes(), 1L);
 
     Task consume = kwq.consume();
     Assert.assertEquals(firstItem, consume);

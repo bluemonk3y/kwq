@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Confluent Inc.
+ * Copyright 2018 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import java.io.IOException;
  * running at `127.0.0.1:2181`.  You can specify a different ZooKeeper instance by setting the
  * `zookeeper.connect` parameter in the broker's configuration.
  */
-public class KafkaEmbedded {
+class KafkaEmbedded {
 
   private static final Logger log = LoggerFactory.getLogger(KafkaEmbedded.class);
 
@@ -70,9 +70,8 @@ public class KafkaEmbedded {
     tmpFolder.create();
     logDir = tmpFolder.newFolder();
     effectiveConfig = effectiveConfigFrom(config);
-    boolean loggingEnabled = true;
 
-    KafkaConfig kafkaConfig = new KafkaConfig(effectiveConfig, loggingEnabled);
+    KafkaConfig kafkaConfig = new KafkaConfig(effectiveConfig);
     log.debug("Starting embedded Kafka broker (with log.dirs={} and ZK ensemble at {}) ...",
             logDir, zookeeperConnect());
     kafka = TestUtils.createServer(kafkaConfig, new SystemTime());
@@ -80,7 +79,7 @@ public class KafkaEmbedded {
             brokerList(), zookeeperConnect());
   }
 
-  private Properties effectiveConfigFrom(Properties initialConfig) throws IOException {
+  private Properties effectiveConfigFrom(Properties initialConfig) {
     Properties effectiveConfig = new Properties();
     effectiveConfig.put(KafkaConfig$.MODULE$.BrokerIdProp(), 0);
     effectiveConfig.put(KafkaConfig$.MODULE$.HostNameProp(), "127.0.0.1");
@@ -171,8 +170,7 @@ public class KafkaEmbedded {
             DEFAULT_ZK_SESSION_TIMEOUT_MS,
             DEFAULT_ZK_CONNECTION_TIMEOUT_MS,
             ZKStringSerializer$.MODULE$);
-    boolean isSecure = false;
-    ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeperConnect()), isSecure);
+    ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeperConnect()), false);
     AdminUtils.createTopic(zkUtils, topic, partitions, replication, topicConfig, RackAwareMode.Enforced$.MODULE$);
     zkClient.close();
   }

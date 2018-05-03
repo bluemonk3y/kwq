@@ -1,7 +1,5 @@
-package io.confluent.kwq.util;
-
 /**
- * Copyright 2017 Confluent Inc.
+ * Copyright 2018 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +13,8 @@ package io.confluent.kwq.util;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+package io.confluent.kwq.util;
 
-import io.confluent.ksql.exception.KafkaResponseGetFailedException;
-import io.confluent.ksql.exception.KafkaTopicException;
 import io.confluent.ksql.util.KsqlException;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
@@ -64,9 +61,9 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
   public void createTopic(
           final String topic,
           final int numPartitions,
-          final short replicatonFactor
+          final short replicationFactor
   ) {
-    createTopic(topic, numPartitions, replicatonFactor, Collections.emptyMap());
+    createTopic(topic, numPartitions, replicationFactor, Collections.emptyMap());
   }
 
   @Override
@@ -88,7 +85,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
       retryHelper.executeWithRetries(() -> adminClient.createTopics(Collections.singleton(newTopic))
               .all());
     } catch (InterruptedException e) {
-      throw new KafkaResponseGetFailedException(
+      throw new RuntimeException(
               "Failed to guarantee existence of topic " + topic, e);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof TopicExistsException) {
@@ -98,7 +95,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
         validateTopicProperties(topic, numPartitions, replicationFactor);
         return;
       }
-      throw new KafkaResponseGetFailedException("Failed to guarantee existence of topic" + topic,
+      throw new RuntimeException("Failed to guarantee existence of topic" + topic,
               e);
     }
   }
@@ -115,7 +112,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
       RetryHelper<Set<String>> retryHelper = new RetryHelper<>();
       return retryHelper.executeWithRetries(() -> adminClient.listTopics().names());
     } catch (InterruptedException | ExecutionException e) {
-      throw new KafkaResponseGetFailedException("Failed to retrieve Kafka Topic names", e);
+      throw new RuntimeException("Failed to retrieve Kafka Topic names", e);
     }
   }
 
@@ -125,7 +122,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
       RetryHelper<Map<String, TopicDescription>> retryHelper = new RetryHelper<>();
       return retryHelper.executeWithRetries(() -> adminClient.describeTopics(topicNames).all());
     } catch (InterruptedException | ExecutionException e) {
-      throw new KafkaResponseGetFailedException("Failed to Describe Kafka Topics", e);
+      throw new RuntimeException("Failed to Describe Kafka Topics", e);
     }
   }
 
@@ -190,7 +187,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
         DescribeConfigsResult
                 describeConfigsResult = adminClient.describeConfigs(Collections.singleton(resource));
         Map<ConfigResource, Config> config = retryHelper.executeWithRetries(
-                () -> describeConfigsResult.all()
+                describeConfigsResult::all
         );
 
         this.isDeleteTopicEnabled = config.get(resource)
@@ -203,7 +200,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
       } else {
         log.warn("No available broker found to fetch config info.");
         throw new KsqlException("Could not fetch broker information. KSQL cannot initialize "
-                + "AdminCLient.");
+                + "AdminClient.");
       }
     } catch (InterruptedException | ExecutionException ex) {
       log.error("Failed to initialize TopicClient: {}", ex.getMessage());
@@ -227,7 +224,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
     TopicDescription topicDescription = topicDescriptions.get(topic);
     if (topicDescription.partitions().size() != numPartitions
             || topicDescription.partitions().get(0).replicas().size() < replicationFactor) {
-      throw new KafkaTopicException(String.format(
+      throw new RuntimeException(String.format(
               "Topic '%s' does not conform to the requirements Partitions:%d v %d. Replication: %d "
                       + "v %d",
               topic,
@@ -237,7 +234,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
               replicationFactor
       ));
     }
-    // Topic with the partitons and replicas exists, reuse it!
+    // Topic with the partitions and replicas exists, reuse it!
     log.debug(
             "Did not create topic {} with {} partitions and replication-factor {} since it already "
                     + "exists",
@@ -261,7 +258,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
         } catch (ExecutionException e) {
           if (e.getCause() instanceof RetriableException) {
             retries++;
-            log.info("Retrying admin request due to retriable exception. Retry no: "
+            log.info("Retrying admin request due to retry exception. Retry no: "
                     + retries, e);
             lastException = e;
           } else {

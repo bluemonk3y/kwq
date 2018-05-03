@@ -1,7 +1,5 @@
-package io.confluent.kwq.util;
-
 /**
- * Copyright 2017 Confluent Inc.
+ * Copyright 2018 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +14,9 @@ package io.confluent.kwq.util;
  * limitations under the License.
  **/
 
+package io.confluent.kwq.util;
+
+
 import org.apache.kafka.clients.admin.TopicDescription;
 
 import java.io.Closeable;
@@ -27,15 +28,15 @@ import java.util.Set;
 public interface KafkaTopicClient extends Closeable {
 
   /**
-   * Create a new topic with the specified name, numPartitions and replicatonFactor.
+   * Create a new topic with the specified name, numPartitions and replicationFactor.
    * [warn] synchronous call to get the response
    *
    * @param topic name of the topic to create
    */
-  void createTopic(String topic, int numPartitions, short replicatonFactor);
+  void createTopic(String topic, int numPartitions, short replicationFactor);
 
   /**
-   * Create a new topic with the specified name, numPartitions and replicatonFactor.
+   * Create a new topic with the specified name, numPartitions and replicationFactor.
    * [warn] synchronous call to get the response
    *
    * @param topic name of the topic to create
@@ -44,7 +45,7 @@ public interface KafkaTopicClient extends Closeable {
   void createTopic(
           String topic,
           int numPartitions,
-          short replicatonFactor,
+          short replicationFactor,
           Map<String, String> configs
   );
 

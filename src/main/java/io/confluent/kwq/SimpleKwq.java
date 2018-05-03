@@ -1,3 +1,18 @@
+/**
+ * Copyright 2018 Confluent Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package io.confluent.kwq;
 
 import io.confluent.ksql.util.KsqlConfig;
@@ -22,27 +37,26 @@ import java.util.Properties;
  * Note: This impl relies on auto-commit; as a result - if killed, it can potentially lose messages that were held in-memory, but not yet dispatched.
  */
 public class SimpleKwq implements Kwq {
-  public static final int CONSUMER_POLL_TIMEOUT_MS = 100;
-  public static final long IDLE_WAIT_MS = 1000l;
+  private static final int CONSUMER_POLL_TIMEOUT_MS = 100;
+  static final long IDLE_WAIT_MS = 1000L;
   private final int numPriorities;
   private final String prefix;
-  private int numPartitions;
-  private short replicationFactor;
+  private final int numPartitions;
+  private final short replicationFactor;
   private final Properties consumerConfig;
-  private final AdminClient adminClient;
-  private List<String> topics = new ArrayList<>();
-  private List<KafkaConsumer> consumers = new ArrayList<>();
+  private final List<String> topics = new ArrayList<>();
+  private final List<KafkaConsumer> consumers = new ArrayList<>();
 
-  private KafkaTopicClient topicClient;
+  private final KafkaTopicClient topicClient;
 
-  public SimpleKwq(int numPriorities, String prefix, String boostrap_servers, int numPartitions, short replicationFactor) {
+  public SimpleKwq(int numPriorities, String prefix, String bootstrapServers, int numPartitions, short replicationFactor) {
     this.numPriorities = numPriorities;
     this.prefix = prefix.toUpperCase();
     this.numPartitions = numPartitions;
     this.replicationFactor = replicationFactor;
 
     consumerConfig = new Properties();
-    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrap_servers);
+    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, prefix);
     consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
@@ -51,7 +65,7 @@ public class SimpleKwq implements Kwq {
 
     Map<String, Object> ksqlAdminClientConfigProps = ksqlConfig.getKsqlAdminClientConfigProps();
 
-    this.adminClient = AdminClient.create(ksqlAdminClientConfigProps);
+    AdminClient adminClient = AdminClient.create(ksqlAdminClientConfigProps);
     this.topicClient = new KafkaTopicClientImpl(adminClient);
   }
 
@@ -82,7 +96,6 @@ public class SimpleKwq implements Kwq {
 
       consumer.subscribe(Collections.singleton(topicName));
       consumers.add(consumer);
-      System.out.println("====== Added Consumer - Topic:" + topicName + " c:" + consumer);
     }
   }
 
@@ -92,7 +105,7 @@ public class SimpleKwq implements Kwq {
   public Task consume() {
 
     while (nextRecords == null || !nextRecords.iterator.hasNext()) {
-      nextRecords = getRecords();
+      nextRecords = getRecordsFromHighestPriorityTopic();
       if (nextRecords == null || nextRecords.iterator.hasNext()) {
         try {
           Thread.sleep(IDLE_WAIT_MS);
@@ -115,11 +128,10 @@ public class SimpleKwq implements Kwq {
 
   }
 
-  public ConsumerAndRecords getRecords() {
-    ConsumerRecords<String,Task> results = null;
+  ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
+    ConsumerRecords<String,Task> results;
     for (int i = consumers.size()-1; i >= 0; i--) {
       KafkaConsumer<String, Task> consumer = consumers.get(i);
-//      System.out.println("Checking:" + "P:" + (i + 1) + " " + consumer);
       results = consumer.poll(CONSUMER_POLL_TIMEOUT_MS);
       if (!results.isEmpty()) {
         return new ConsumerAndRecords(consumer, results.iterator());

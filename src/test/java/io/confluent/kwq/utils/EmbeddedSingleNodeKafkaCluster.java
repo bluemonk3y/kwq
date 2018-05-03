@@ -1,6 +1,5 @@
-package io.confluent.kwq.utils;
 /**
- * Copyright 2017 Confluent Inc.
+ * Copyright 2018 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +13,8 @@ package io.confluent.kwq.utils;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+package io.confluent.kwq.utils;
+
 
 import org.slf4j.Logger;
 
@@ -49,7 +50,7 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
    *
    * @param brokerConfig Additional broker configuration settings.
    */
-  public EmbeddedSingleNodeKafkaCluster(Properties brokerConfig) {
+  private EmbeddedSingleNodeKafkaCluster(Properties brokerConfig) {
     this.brokerConfig = new Properties();
     this.brokerConfig.putAll(brokerConfig);
   }
@@ -157,10 +158,10 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
    * @param replication The replication factor for (partitions of) this topic.
    * @param topicConfig Additional topic-level configuration settings.
    */
-  public void createTopic(String topic,
-                          int partitions,
-                          int replication,
-                          Properties topicConfig) {
+  private void createTopic(String topic,
+                           int partitions,
+                           int replication,
+                           Properties topicConfig) {
     broker.createTopic(topic, partitions, replication, topicConfig);
   }
 

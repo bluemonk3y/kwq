@@ -1,3 +1,18 @@
+/**
+ * Copyright 2018 Confluent Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 package io.confluent.kwq;
 
 import java.util.HashMap;
@@ -15,6 +30,7 @@ public class Task implements Comparable<Task> {
 
   public Task(
           String id,
+          String groupId,
           int priority,
           String tag,
           Status status,
@@ -25,6 +41,7 @@ public class Task implements Comparable<Task> {
           long completed_ts) {
 
     this.id = id;
+    this.groupId = groupId;
     this.priority = priority;
     this.tag = tag;
     this.status = status;
@@ -35,15 +52,16 @@ public class Task implements Comparable<Task> {
     this.completed_ts = completed_ts;
   }
 
-  String id;
-  int priority;
-  String tag;
-  Status status;
-  String payload;
-  long submitted_ts;
-  long allocated_ts;
-  long running_ts;
-  long completed_ts;
+  private String id;
+  private String groupId;
+  private int priority;
+  private String tag;
+  private Status status;
+  private String payload;
+  private long submitted_ts;
+  private long allocated_ts;
+  private long running_ts;
+  private long completed_ts;
 
   public int getPriority() {
     return priority;
@@ -81,10 +99,15 @@ public class Task implements Comparable<Task> {
     return id;
   }
 
+  public String getGroupId() {
+    return groupId;
+  }
+
   @Override
   public String toString() {
     return "Task{" +
             "id='" + id + '\'' +
+            "groupId='" + groupId + '\'' +
             ", priority=" + priority +
             ", tag='" + tag + '\'' +
             ", status='" + status + '\'' +
@@ -115,10 +138,13 @@ public class Task implements Comparable<Task> {
   }
 
   public static class TaskBuilder {
-    Map<String, Object> values = new HashMap<>();
+    final Map<String, Object> values = new HashMap<>();
 
     TaskBuilder id(String value) {
       return putInt("id", value);
+    }
+    TaskBuilder groupId(String value) {
+      return putInt("groupId", value);
     }
     TaskBuilder priority(int value) {
       return putInt("priority", value);
@@ -147,13 +173,13 @@ public class Task implements Comparable<Task> {
 
     public Task build() {
       return new Task(
-              get("id"), (int) values.get("priority"), get("tag"), Status.valueOf(get("status")), get("payload"),
+              get("id"), get("groupId"), (int) values.get("priority"), get("tag"), Status.valueOf(get("status")), get("payload"),
               getLong("submitted_ts"), getLong("allocated_ts"), getLong("running_ts"), getLong("completed_ts")
       );
     }
 
     private long getLong(String key) {
-      return (long) values.getOrDefault(key, 0l);
+      return (long) values.getOrDefault(key, 0L);
     }
 
     private String get(String key) {

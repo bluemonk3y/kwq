@@ -15,13 +15,6 @@
  **/
 package io.confluent.kwq;
 
-interface Kwq {
-
-  Task consume();
-
-  void pause();
-  void start();
-
-  String status();
-
+interface TaskStatus {
+  void add(Task task);
 }
