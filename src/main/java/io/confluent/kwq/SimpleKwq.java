@@ -38,7 +38,7 @@ import java.util.Properties;
  */
 public class SimpleKwq implements Kwq {
   private static final int CONSUMER_POLL_TIMEOUT_MS = 100;
-  static final long IDLE_WAIT_MS = 1000L;
+  private static final long IDLE_WAIT_MS = 1000L;
   private final int numPriorities;
   private final String prefix;
   private final int numPartitions;
@@ -100,7 +100,7 @@ public class SimpleKwq implements Kwq {
   }
 
 
-  ConsumerAndRecords nextRecords;
+  private ConsumerAndRecords nextRecords;
 
   public Task consume() {
 
@@ -128,7 +128,7 @@ public class SimpleKwq implements Kwq {
 
   }
 
-  ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
+  private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
     ConsumerRecords<String,Task> results;
     for (int i = consumers.size()-1; i >= 0; i--) {
       KafkaConsumer<String, Task> consumer = consumers.get(i);

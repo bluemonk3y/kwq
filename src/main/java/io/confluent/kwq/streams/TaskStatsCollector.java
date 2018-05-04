@@ -17,12 +17,14 @@ package io.confluent.kwq.streams;
 
 import io.confluent.kwq.Task;
 import io.confluent.kwq.streams.model.TaskStats;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 
@@ -46,16 +48,14 @@ public class TaskStatsCollector {
     StreamsBuilder builder = new StreamsBuilder();
     KStream<String, Task> tasks = builder.stream(taskStatusTopic);
 
-
     KTable<Windowed<String>, TaskStats> windowedTaskStatsKTable = tasks
             .groupBy((key, value) -> "agg-all-values")
+            .windowedBy(TimeWindows.of(windowDurationS * 1000))
             .aggregate(
                     TaskStats::new,
-                    (String key, Task value, TaskStats aggregate) -> aggregate.add(value),
-                    TimeWindows.of(windowDurationS * 1000),
-                    new TaskStats.TaskStatsSerde(),
-                    "task-stats-store");
-
+                    (key, value, aggregate) -> aggregate.add(value),
+                    Materialized.with(new Serdes.StringSerde(), new TaskStats.TaskStatsSerde())
+            );
 
     /**
      * We only want to view the final value of each window, and not every CDC event, so use a window threshold.
@@ -66,7 +66,7 @@ public class TaskStatsCollector {
           lastWindowStart = key.window().start();
           // publish the last counted value
           lastWindowStats = currentWindowStats;
-//          TODO: Publish stats onto Topic for visualization via Grafana (store in elastic or influx)
+//          TODO: Publish stats onto a Topic for visualization via Grafana (store in elastic or influx)
         }
         currentWindowStats = value;
       }

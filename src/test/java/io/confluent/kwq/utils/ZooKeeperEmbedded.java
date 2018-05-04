@@ -59,12 +59,4 @@ class ZooKeeperEmbedded {
     return server.getConnectString();
   }
 
-  /**
-   * The hostname of the ZooKeeper instance.  Example: `127.0.0.1`
-   */
-  public String hostname() {
-    // "server:1:2:3" -> "server:1:2"
-    return connectString().substring(0, connectString().lastIndexOf(':'));
-  }
-
 }

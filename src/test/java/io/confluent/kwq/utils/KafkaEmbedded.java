@@ -128,26 +128,6 @@ class KafkaEmbedded {
   }
 
   /**
-   * Create a Kafka topic with 1 partition and a replication factor of 1.
-   *
-   * @param topic The name of the topic.
-   */
-  public void createTopic(String topic) {
-    createTopic(topic, 1, 1, new Properties());
-  }
-
-  /**
-   * Create a Kafka topic with the given parameters.
-   *
-   * @param topic       The name of the topic.
-   * @param partitions  The number of partitions for this topic.
-   * @param replication The replication factor for (the partitions of) this topic.
-   */
-  public void createTopic(String topic, int partitions, int replication) {
-    createTopic(topic, partitions, replication, new Properties());
-  }
-
-  /**
    * Create a Kafka topic with the given parameters.
    *
    * @param topic       The name of the topic.

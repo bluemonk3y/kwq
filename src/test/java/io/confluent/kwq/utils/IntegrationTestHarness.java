@@ -44,7 +44,6 @@ import java.util.concurrent.TimeoutException;
 public class IntegrationTestHarness {
 
   private static final long TEST_RECORD_FUTURE_TIMEOUT_MS = 5000;
-  private final String CONSUMER_GROUP_ID_PREFIX  = "KWQ-test";
 
   public EmbeddedSingleNodeKafkaCluster embeddedKafkaCluster;
   private KsqlConfig ksqlConfig;
@@ -84,10 +83,10 @@ public class IntegrationTestHarness {
     topicClient.createTopic(topicName, numPartitions, (short) replicationFactor);
   }
 
-  public <V> Map<String, RecordMetadata> produceData(String topicName,
-                                                 Map<String, V> recordsToPublish,
-                                                 Serializer<V> valueSerializer,
-                                                 Long timestamp)
+  public <V> void produceData(String topicName,
+                              Map<String, V> recordsToPublish,
+                              Serializer<V> valueSerializer,
+                              Long timestamp)
           throws InterruptedException, TimeoutException, ExecutionException {
 
     createTopic(topicName, 1, 1);
@@ -103,7 +102,6 @@ public class IntegrationTestHarness {
     }
     producer.close();
 
-    return result;
   }
   private <V> ProducerRecord<String, V> buildRecord(String topicName,
                                                          Long timestamp,
@@ -120,15 +118,6 @@ public class IntegrationTestHarness {
     return producerConfig;
   }
 
-  void produceRecord(final String topicName, final String key, final String data) {
-    try(final KafkaProducer<String, String> producer
-                = new KafkaProducer<>(properties(),
-            new StringSerializer(),
-            new StringSerializer())) {
-      producer.send(new ProducerRecord<>(topicName, key, data));
-    }
-  }
-
 
   public <K, V> Map<K, V> consumeData(String topic,
                                             int expectedNumMessages,
@@ -140,6 +129,7 @@ public class IntegrationTestHarness {
 
     Properties consumerConfig = new Properties();
     consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ksqlConfig.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+    String CONSUMER_GROUP_ID_PREFIX = "KWQ-test";
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_ID_PREFIX + System.currentTimeMillis());
     consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
@@ -164,10 +154,6 @@ public class IntegrationTestHarness {
 
       return result;
     }
-  }
-
-  private static boolean continueConsuming(int messagesConsumed, int maxMessages) {
-    return maxMessages < 0 || messagesConsumed < maxMessages;
   }
 
 

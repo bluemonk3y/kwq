@@ -119,36 +119,6 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
     return broker.brokerList();
   }
 
-  /**
-   * This cluster's ZK connection string aka `zookeeper.connect` in `hostnameOrIp:port` format.
-   * Example: `127.0.0.1:2181`.
-   *
-   * You can use this to e.g. tell Kafka consumers how to connect to this cluster.
-   */
-  public String zookeeperConnect() {
-    return zookeeper.connectString();
-  }
-
-
-  /**
-   * Create a Kafka topic with 1 partition and a replication factor of 1.
-   *
-   * @param topic The name of the topic.
-   */
-  public void createTopic(String topic) {
-    createTopic(topic, 1, 1, new Properties());
-  }
-
-  /**
-   * Create a Kafka topic with the given parameters.
-   *
-   * @param topic       The name of the topic.
-   * @param partitions  The number of partitions for this topic.
-   * @param replication The replication factor for (the partitions of) this topic.
-   */
-  public void createTopic(String topic, int partitions, int replication) {
-    createTopic(topic, partitions, replication, new Properties());
-  }
 
   /**
    * Create a Kafka topic with the given parameters.
