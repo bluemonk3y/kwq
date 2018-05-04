@@ -29,16 +29,14 @@ import org.junit.Test;
 import java.util.Map;
 import java.util.Properties;
 
-public class TotalEventsTumblingWindowTest {
-
-
+public class TaskStatsCollectorTest {
 
   @Test
   public void getTotalWindowEvents() throws Exception {
 
     StreamsConfig streamsConfig = new StreamsConfig(getProperties());
 
-    TotalEventThroughputTumblingWindow totalEvents = new TotalEventThroughputTumblingWindow("TestTopic", streamsConfig, 1);
+    TaskStatsCollector totalEvents = new TaskStatsCollector("TestTopic", streamsConfig, 1);
 
     Topology topology = totalEvents.getTopology();
 
@@ -54,7 +52,7 @@ public class TotalEventsTumblingWindowTest {
 
     driver.close();
     // read the current throughput -= should be 1
-    Assert.assertEquals(10, totalEvents.getTotalEvents());
+    Assert.assertEquals(10, totalEvents.getLastWindowStats().getTotal());
   }
 
 
@@ -63,7 +61,7 @@ public class TotalEventsTumblingWindowTest {
 
     StreamsConfig streamsConfig = new StreamsConfig(getProperties());
 
-    TotalEventThroughputTumblingWindow totalEvents = new TotalEventThroughputTumblingWindow("TestTopic", streamsConfig, 1);
+    TaskStatsCollector totalEvents = new TaskStatsCollector("TestTopic", streamsConfig, 1);
 
     Topology topology = totalEvents.getTopology();
 
@@ -75,7 +73,7 @@ public class TotalEventsTumblingWindowTest {
 
     driver.close();
     // read the current throughput -= should be 1
-    Assert.assertEquals(1, totalEvents.getCurrentEvents());
+    Assert.assertEquals(1, totalEvents.getCurrentStats().getTotal());
   }
 
   private Properties getProperties() {

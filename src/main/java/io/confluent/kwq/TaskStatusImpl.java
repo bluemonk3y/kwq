@@ -1,6 +1,6 @@
 package io.confluent.kwq;
 
-import io.confluent.kwq.streams.TotalEventThroughputTumblingWindow;
+import io.confluent.kwq.streams.TaskStatsCollector;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,7 +13,7 @@ public class TaskStatusImpl implements TaskStatus {
 
   private static final String TASK_STATUS_TOPIC = "taskStatusTopic";
   private final KafkaProducer<String, Task> producer;
-  private TotalEventThroughputTumblingWindow totalEventsTumblingWindow;
+  private TaskStatsCollector statsTumblingWindow;
 
   public TaskStatusImpl(String bootstrapServers){
     producer = new KafkaProducer<>(producerProperties(bootstrapServers), new StringSerializer(), new TaskSerDes());
@@ -23,8 +23,8 @@ public class TaskStatusImpl implements TaskStatus {
 
   private void startStreamsJobs(String bootstrapServers) {
     // TODO: Inject collection of streams apps
-    totalEventsTumblingWindow = new TotalEventThroughputTumblingWindow(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
-    totalEventsTumblingWindow.start();
+    statsTumblingWindow = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
+    statsTumblingWindow.start();
   }
 
 
@@ -34,17 +34,17 @@ public class TaskStatusImpl implements TaskStatus {
   }
 
   public long getTotalThroughputPer() {
-    return totalEventsTumblingWindow.getTotalEvents();
+    return statsTumblingWindow.getLastWindowStats().getTotal();
   }
-  public long getRunningCountPer() {
-    return totalEventsTumblingWindow.getRunning();
-  }
-  public long getErrorCountPer() {
-    return totalEventsTumblingWindow.getError();
-  }
-  public long getCompleted() {
-    return totalEventsTumblingWindow.getCompleted();
-  }
+//  public long getRunningCountPer() {
+//    return statsTumblingWindow.getRunning();
+//  }
+//  public long getErrorCountPer() {
+//    return statsTumblingWindow.getError();
+//  }
+//  public long getCompleted() {
+//    return statsTumblingWindow.getCompleted();
+//  }
 
 
 

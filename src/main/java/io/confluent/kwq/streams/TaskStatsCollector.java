@@ -16,29 +16,27 @@
 package io.confluent.kwq.streams;
 
 import io.confluent.kwq.Task;
+import io.confluent.kwq.streams.model.TaskStats;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 
 
-public class TotalEventThroughputTumblingWindow {
+public class TaskStatsCollector {
 
   private final Topology topology;
   private int windowDurationS = 5;
-  private long totalEvents;
-  private long currentEvents;
+  private TaskStats lastWindowStats;
+  private TaskStats currentWindowStats;
   private final StreamsConfig streamsConfig;
-  private long running;
-  private long error;
-  private long completed;
+  private long lastWindowStart = -1;
 
-  public TotalEventThroughputTumblingWindow(String taskStatusTopic, StreamsConfig streamsConfig, int windowDurationS){
+  public TaskStatsCollector(String taskStatusTopic, StreamsConfig streamsConfig, int windowDurationS){
     this.streamsConfig = streamsConfig;
     this.windowDurationS = windowDurationS;
     this.topology = buildTopology(taskStatusTopic);
@@ -49,28 +47,30 @@ public class TotalEventThroughputTumblingWindow {
     KStream<String, Task> tasks = builder.stream(taskStatusTopic);
 
 
-    KTable<Windowed<String>, Long> count = tasks.groupBy((key, value) -> "agg-all-values").
-            windowedBy(TimeWindows.of(windowDurationS * 1000)).count();
+    KTable<Windowed<String>, TaskStats> windowedTaskStatsKTable = tasks
+            .groupBy((key, value) -> "agg-all-values")
+            .aggregate(
+                    TaskStats::new,
+                    (String key, Task value, TaskStats aggregate) -> aggregate.add(value),
+                    TimeWindows.of(windowDurationS * 1000),
+                    new TaskStats.TaskStatsSerde(),
+                    "task-stats-store");
+
 
     /**
      * We only want to view the final value of each window, and not every CDC event, so use a window threshold.
      * Note: this is problematic when data stops and we could potentially use a 'future' to manage missing adjacent window - we really need a callback on window expiry
      */
-    count.toStream().foreach(new ForeachAction<Windowed<String>, Long>() {
-      public long lastWindowStart = -1;
-      public long lastValue;
-
-      @Override
-      public void apply(Windowed<String> key, Long value) {
-        if (key.window().start() != lastWindowStart) {
+    windowedTaskStatsKTable.toStream().foreach( (key, value) -> {
+      if (key.window().start() != lastWindowStart) {
           lastWindowStart = key.window().start();
           // publish the last counted value
-          totalEvents = lastValue;
+          lastWindowStats = currentWindowStats;
+//          TODO: Publish stats onto Topic for visualization via Grafana (store in elastic or influx)
         }
-        lastValue = value;
-        currentEvents = value;
+        currentWindowStats = value;
       }
-    });
+    );
 
     return builder.build();
   }
@@ -80,26 +80,15 @@ public class TotalEventThroughputTumblingWindow {
         streams.start();
   }
 
-  public long getTotalEvents() {
-    return totalEvents;
+  public TaskStats getLastWindowStats() {
+    return lastWindowStats;
   }
-  public long getCurrentEvents() {
-    return currentEvents;
+  public TaskStats getCurrentStats() {
+    return currentWindowStats;
   }
 
   public Topology getTopology() {
     return topology;
   }
 
-  public long getRunning() {
-    return running;
-  }
-
-  public long getError() {
-    return error;
-  }
-
-  public long getCompleted() {
-    return completed;
-  }
 }

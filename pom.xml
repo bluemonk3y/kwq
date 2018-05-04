@@ -73,6 +73,12 @@
             <version>${kafka.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
 
 
         <!-- Test -->
