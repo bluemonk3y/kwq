@@ -46,17 +46,7 @@ This component is a Kafka Stream processor that traxks when a where Tasks are 'A
 The general architecture contains a REST Endpoint for Submitting or consuming tasks. Tasks can alternative by submitted directly onto a KWQ- priority topic.
 Workers request tasks from the same REST endpoint and the scheduler (KWQ) updates the status in the Task Tracker. When a task is 'complete' or 'error' then the worker can notify the Task Tracker via the REST endpoint.
 
-## Running KWQ
-
-Execute RestServerMain - it runs an embedded Jersey-2 JAX-RS service that exposes the endpoints listed below. 
-> Configure it to connect to your Kafka brokers -Dbootstrap.servers=localhost:9092
-
- ## Endpoints
-  
- - REST: http://localhost:8080/api/kwq 
- - SWAGGER: http://localhost:8080/swagger/index.html Submit test tasks and check status
- - OPEN-API-SPEC: http://localhost:8080/api/openapi.json
- - ADMIN UI: http://localhost:8080/index.html (placeholder for now)
+ 
  
  ## API
 
