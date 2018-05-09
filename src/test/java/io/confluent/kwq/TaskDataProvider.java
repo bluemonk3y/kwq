@@ -24,12 +24,12 @@ public class TaskDataProvider  {
 
   private Map<String, Task> buildData() {
     Map<String, Task> dataMap = new TreeMap<>();
-    dataMap.put("0", new Task("0", "job1", 1, "tag-1", Task.Status.SUBMITTED, "PAYLOAD-0", 0, 0, 0, 0));
-    dataMap.put("1", new Task("1", "job1", 2, "tag-2", Task.Status.SUBMITTED, "PAYLOAD-1", 0, 0, 0, 0));
-    dataMap.put("2", new Task("2", "job2", 1, "tag-1", Task.Status.ALLOCATED, "PAYLOAD-2", 0, 0, 0, 0));
-    dataMap.put("3", new Task("3", "job2", 2, "tag-2", Task.Status.RUNNING, "PAYLOAD-3", 0, 0, 0, 0));
-    dataMap.put("4", new Task("4", "job3", 1, "tag-1", Task.Status.COMPLETED, "PAYLOAD-4", 0, 0, 0, 0));
-    dataMap.put("5", new Task("5", "job4", 1, "tag-1", Task.Status.COMPLETED, "PAYLOAD-5", 0, 0, 0, 0));
+    dataMap.put("0", new Task("0", "job1", 1, "tag-1", "source", "PAYLOAD-0", Task.Status.SUBMITTED, "worker", "worker-ep", 100, "meta", 60, 0, 0, 0, 0));
+    dataMap.put("1", new Task("1", "job1", 2, "tag-2", "source", "PAYLOAD-0", Task.Status.SUBMITTED, "worker", "worker-ep", 100, "meta", 60, 0, 0, 0, 0));
+    dataMap.put("2", new Task("2", "job2", 1, "tag-1", "source", "PAYLOAD-0", Task.Status.ALLOCATED, "worker", "worker-ep", 100, "meta", 60, 0, 0, 0, 0));
+    dataMap.put("3", new Task("3", "job2", 2, "tag-2", "source", "PAYLOAD-0", Task.Status.RUNNING, "worker", "worker-ep", 100, "meta", 60, 0, 0, 0, 0));
+    dataMap.put("4", new Task("4", "job3", 1, "tag-1", "source", "PAYLOAD-0", Task.Status.COMPLETED, "worker", "worker-ep", 100, "meta",60,  0, 0, 0, 0));
+    dataMap.put("5", new Task("5", "job4", 1, "tag-1", "source", "PAYLOAD-0", Task.Status.COMPLETED, "worker", "worker-ep", 100, "meta", 60, 0, 0, 0, 0));
     return dataMap;
   }
 

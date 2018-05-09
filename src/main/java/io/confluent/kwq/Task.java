@@ -15,9 +15,6 @@
  **/
 package io.confluent.kwq;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Task implements Comparable<Task> {
 
 
@@ -33,8 +30,14 @@ public class Task implements Comparable<Task> {
           String groupId,
           int priority,
           String tag,
-          Status status,
+          String source,
           String payload,
+          Status status,
+          String worker,
+          String workerEndpoint,
+          int runCount,
+          String meta,
+          long timeoutSeconds,
           long submitted_ts,
           long allocated_ts,
           long running_ts,
@@ -44,8 +47,14 @@ public class Task implements Comparable<Task> {
     this.groupId = groupId;
     this.priority = priority;
     this.tag = tag;
-    this.status = status;
+    this.source = source;
     this.payload = payload;
+    this.status = status;
+    this.worker = worker;
+    this.runCount = runCount;
+    this.workerEndpoint = workerEndpoint;
+    this.meta = meta;
+    this.timeoutSeconds = timeoutSeconds;
     this.submitted_ts = submitted_ts;
     this.allocated_ts = allocated_ts;
     this.running_ts = running_ts;
@@ -56,12 +65,26 @@ public class Task implements Comparable<Task> {
   private String groupId;
   private int priority;
   private String tag;
+  private String source;
   private Status status;
+  private String worker;
+  private int runCount;
+  private String workerEndpoint;
+  private String meta;
+  private long timeoutSeconds;
   private String payload;
   private long submitted_ts;
   private long allocated_ts;
   private long running_ts;
   private long completed_ts;
+
+  public String getId() {
+    return id;
+  }
+
+  public String getGroupId() {
+    return groupId;
+  }
 
   public int getPriority() {
     return priority;
@@ -71,8 +94,32 @@ public class Task implements Comparable<Task> {
     return tag;
   }
 
+  public String getSource() {
+    return source;
+  }
+
   public Status getStatus() {
     return status;
+  }
+
+  public String getWorker() {
+    return worker;
+  }
+
+  public int getRunCount() {
+    return runCount;
+  }
+
+  public long getTimeoutSeconds() {
+    return timeoutSeconds;
+  }
+
+  public String getWorkerEndpoint() {
+    return workerEndpoint;
+  }
+
+  public String getMeta() {
+    return meta;
   }
 
   public String getPayload() {
@@ -95,22 +142,18 @@ public class Task implements Comparable<Task> {
     return completed_ts;
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public String getGroupId() {
-    return groupId;
-  }
-
   @Override
   public String toString() {
     return "Task{" +
             "id='" + id + '\'' +
-            "groupId='" + groupId + '\'' +
+            ", groupId='" + groupId + '\'' +
             ", priority=" + priority +
             ", tag='" + tag + '\'' +
-            ", status='" + status + '\'' +
+            ", source='" + source + '\'' +
+            ", status=" + status +
+            ", worker='" + worker + '\'' +
+            ", workerEndpoint='" + workerEndpoint + '\'' +
+            ", meta=" + meta +
             ", payload='" + payload + '\'' +
             ", submitted_ts=" + submitted_ts +
             ", allocated_ts=" + allocated_ts +
@@ -137,58 +180,59 @@ public class Task implements Comparable<Task> {
     return Integer.compare(this.priority, o.priority);
   }
 
-  public static class TaskBuilder {
-    final Map<String, Object> values = new HashMap<>();
-
-    TaskBuilder id(String value) {
-      return putInt("id", value);
-    }
-    TaskBuilder groupId(String value) {
-      return putInt("groupId", value);
-    }
-    TaskBuilder priority(int value) {
-      return putInt("priority", value);
-    }
-    TaskBuilder tag(String value) {
-      return putInt("tag", value);
-    }
-    TaskBuilder status(String value) {
-      return putInt("status", value);
-    }
-    TaskBuilder payload(String value) {
-      return putInt("payload", value);
-    }
-    TaskBuilder submitted_ts(long value) {
-      return putInt("submitted_ts", value);
-    }
-    TaskBuilder allocated_ts(long value) {
-      return putInt("allocated_ts", value);
-    }
-    TaskBuilder running_ts(long value) {
-      return putInt("running_ts", value);
-    }
-    TaskBuilder completed_ts(long value) {
-      return putInt("completed_ts", value);
-    }
-
-    public Task build() {
-      return new Task(
-              get("id"), get("groupId"), (int) values.get("priority"), get("tag"), Status.valueOf(get("status")), get("payload"),
-              getLong("submitted_ts"), getLong("allocated_ts"), getLong("running_ts"), getLong("completed_ts")
-      );
-    }
-
-    private long getLong(String key) {
-      return (long) values.getOrDefault(key, 0L);
-    }
-
-    private String get(String key) {
-      return (String) values.get(key);
-    }
-
-    private TaskBuilder putInt(String key, Object value) {
-      values.put(key, value);
-      return this;
-    }
-  }
+//  meh!
+// public static class TaskBuilder {
+//    final Map<String, Object> values = new HashMap<>();
+//
+//    TaskBuilder id(String value) {
+//      return putInt("id", value);
+//    }
+//    TaskBuilder groupId(String value) {
+//      return putInt("groupId", value);
+//    }
+//    TaskBuilder priority(int value) {
+//      return putInt("priority", value);
+//    }
+//    TaskBuilder tag(String value) {
+//      return putInt("tag", value);
+//    }
+//    TaskBuilder status(String value) {
+//      return putInt("status", value);
+//    }
+//    TaskBuilder payload(String value) {
+//      return putInt("payload", value);
+//    }
+//    TaskBuilder submitted_ts(long value) {
+//      return putInt("submitted_ts", value);
+//    }
+//    TaskBuilder allocated_ts(long value) {
+//      return putInt("allocated_ts", value);
+//    }
+//    TaskBuilder running_ts(long value) {
+//      return putInt("running_ts", value);
+//    }
+//    TaskBuilder completed_ts(long value) {
+//      return putInt("completed_ts", value);
+//    }
+//
+//    public Task build() {
+//      return new Task(
+//              get("id"), get("groupId"), (int) values.get("priority"), get("tag"), Status.valueOf(get("status")), get("payload"),
+//              getLong("submitted_ts"), getLong("allocated_ts"), getLong("running_ts"), getLong("completed_ts")
+//      );
+//    }
+//
+//    private long getLong(String key) {
+//      return (long) values.getOrDefault(key, 0L);
+//    }
+//
+//    private String get(String key) {
+//      return (String) values.get(key);
+//    }
+//
+//    private TaskBuilder putInt(String key, Object value) {
+//      values.put(key, value);
+//      return this;
+//    }
+//  }
 }

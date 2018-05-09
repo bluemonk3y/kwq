@@ -24,6 +24,10 @@
         <exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
         <kafka.scala.version>2.11</kafka.scala.version>
         <kafka.version>1.1.0-SNAPSHOT</kafka.version>
+        <!--<jetty-version>9.2.10.v20150310</jetty-version>-->
+        <!--<swagger-version>1.5.3</swagger-version>-->
+        <!--<jersey2-version>2.7</jersey2-version>-->
+        <!--<slf4j-version>1.7.12</slf4j-version>-->
 
     </properties>
 
@@ -34,9 +38,14 @@
             <url>http://packages.confluent.io/maven/</url>
         </repository>
         <repository>
-            <id>confluent-snapshots</id>
-            <url>https://s3-us-west-2.amazonaws.com/confluent-snapshots/</url>
+            <id>mvnrepository</id>
+            <url>https://mvnrepository.com/artifact/</url>
         </repository>
+
+        <!--<repository>-->
+            <!--<id>confluent-snapshots</id>-->
+            <!--<url>https://s3-us-west-2.amazonaws.com/confluent-snapshots/</url>-->
+        <!--</repository>-->
     </repositories>
     <dependencies>
 
@@ -83,12 +92,67 @@
             <version>RELEASE</version>
         </dependency>
 
+        <!-- JaxRs / Rest -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>9.2.3.v20140905</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>9.2.3.v20140905</version>
+        </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>jsr311-api</artifactId>-->
+            <!--<version>1.1.1</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>javax.servlet</groupId>-->
+            <!--<artifactId>javax.servlet-api</artifactId>-->
+            <!--<version>3.1.0</version>-->
+        <!--</dependency>-->
+
+
+        <!-- glassfish -->
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jetty-http</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2-servlet-initializer</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
 
 
         <!-- Test -->
-
-
-
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
@@ -123,6 +187,7 @@
             <version>${kafka.version}</version>
             <classifier>test</classifier>
         </dependency>
+
 
     </dependencies>
 
