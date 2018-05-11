@@ -25,9 +25,13 @@ public class KwqInstance {
   public KwqInstance(Kwq kwq, TaskStatus taskStatus) {
     this.kwq = kwq;
     this.taskStatus = taskStatus;
-
-    System.out.println("Created: KwqInstance");
   }
+
+  public Kwq getKwq() {
+    return kwq;
+  }
+
+
 
   /**
    * Note: dont care about double locking because it is always created on startup in the Servlet Lifecycle.start()
@@ -35,18 +39,24 @@ public class KwqInstance {
   static KwqInstance singleton = null;
   public static KwqInstance getInstance(Properties propertes) {
     if (singleton == null) {
-        singleton = new KwqInstance(
-                new SimpleKwq(
-                        Integer.valueOf(propertes.getProperty("numPriorities", "9")),
-                        propertes.getProperty("prefix", "kwq"),
-                        propertes.getProperty("bootstrap.servers", "localhost:9092"),
-                        Integer.valueOf(propertes.getProperty("numPartitions", "3")),
-                        Short.valueOf(propertes.getProperty("numReplicas", "2"))),
+      SimpleKwq kwq = new SimpleKwq(
+              Integer.valueOf(propertes.getProperty("numPriorities", "9")),
+              propertes.getProperty("prefix", "kwq"),
+              propertes.getProperty("bootstrap.servers", "localhost:9092"),
+              Integer.valueOf(propertes.getProperty("numPartitions", "3")),
+              Short.valueOf(propertes.getProperty("numReplicas", "1"))
+      );
+      kwq.start();
+      singleton = new KwqInstance(
+              kwq,
                 new TaskStatusImpl(propertes.getProperty("bootstrap.servers", "localhost:9092"))
         );
         return singleton;
     }
     return singleton;
+  }
 
+  public TaskStatus getTaskStatus() {
+    return taskStatus;
   }
 }

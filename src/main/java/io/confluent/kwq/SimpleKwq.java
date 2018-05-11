@@ -23,14 +23,22 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * SimpleKwq uses the requesting thread to service the next ConsumerAndRecords[] set iterator.
@@ -39,6 +47,7 @@ import java.util.Properties;
 public class SimpleKwq implements Kwq {
   private static final int CONSUMER_POLL_TIMEOUT_MS = 100;
   private static final long IDLE_WAIT_MS = 1000L;
+
   private final int numPriorities;
   private final String prefix;
   private final int numPartitions;
@@ -46,6 +55,7 @@ public class SimpleKwq implements Kwq {
   private final Properties consumerConfig;
   private final List<String> topics = new ArrayList<>();
   private final List<KafkaConsumer> consumers = new ArrayList<>();
+  private KafkaProducer producer = null;
 
   private final KafkaTopicClient topicClient;
 
@@ -76,16 +86,15 @@ public class SimpleKwq implements Kwq {
 
   private void createPriorityTopics() {
 
+    producer = new KafkaProducer<>(producerConfig(), new StringSerializer(), new TaskSerDes());
+
     int count = 0;
     for (int priority = 1; priority <= numPriorities; priority++) {
       String topicName = prefix + "-" + priority;
       topicClient.createTopic(topicName, numPartitions, replicationFactor);
       topics.add(topicName);
 
-      Properties config = new Properties();
-      config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerConfig.getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
-      config.put(ConsumerConfig.GROUP_ID_CONFIG, prefix);
-      config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+      Properties config = consumerConfig();
 
       config.put(ConsumerConfig.CLIENT_ID_CONFIG, topicName + "-" + count++);
       config.put(ConsumerConfig.GROUP_ID_CONFIG, topicName + "-" + count++);
@@ -98,7 +107,6 @@ public class SimpleKwq implements Kwq {
       consumers.add(consumer);
     }
   }
-
 
   private ConsumerAndRecords nextRecords;
 
@@ -125,7 +133,16 @@ public class SimpleKwq implements Kwq {
   @Override
   public String status() {
     return "running... yay";
+  }
 
+  @Override
+  public void submit(Task task) {
+
+    // Note: acks = all = means all replica's have received and acknowledged all events
+    int priority = task.getPriority();
+    if (priority <= 1) priority = 1;
+    if (priority > topics.size()) priority = topics.size();
+    producer.send(new ProducerRecord<>(topics.get(priority), task.getId(), task));
   }
 
   private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
@@ -150,4 +167,21 @@ public class SimpleKwq implements Kwq {
       this.iterator = iterator;
     }
   }
+
+  private Properties consumerConfig() {
+    Properties config = new Properties();
+    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerConfig.getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+    config.put(ConsumerConfig.GROUP_ID_CONFIG, prefix);
+    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    return config;
+  }
+
+  private Properties producerConfig() {
+    Properties producerConfig = new Properties();
+    producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerConfig.getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+    producerConfig.put(ProducerConfig.ACKS_CONFIG, "all");
+    producerConfig.put(ProducerConfig.RETRIES_CONFIG, 0);
+    return producerConfig;
+  }
+
 }

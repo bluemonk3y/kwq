@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>KWQ Experimental UI</title>
-    <script src="/static/ksql.js"></script>
-    <script src="/static/jsontoyaml.js"></script>
+    <script src="static/ksql.js"></script>
+    <script src="static/jsontoyaml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.9/ace.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="/static/ksql.css">
+    <link rel="stylesheet" type="text/css" href="static/ksql.css">
     <style>
 
     </style>
@@ -16,7 +16,7 @@
 
 
 <div id="ksql-header" style="width:100%">
-    <div id="logo"><img src="/static/logo.png?raw=true" alt="logo@3x.png"> </div>
+    <div id="logo"><img src="static/logo.png?raw=true" alt="logo@3x.png"> </div>
     <div style="width:70%; float:left;">
         <h1 id="title">KWQ</h1>
         <h5 id="sub-title">experimental ui</h5>
@@ -28,19 +28,12 @@
 
 
 <div id="command-row">
-    <div id="command-input-div">
-        <div class="section-title">Query:</div>
-        <div id="editor"></div>
-        <button id="run-button" onclick="runCommand()">RUN</button>
-        <span class="loading" id="request_loading" hidden>Streaming data....</span>
-        <button hidden id="cancel_request" onclick="xhr.abort();">Cancel</button>
-    </div>
     <div id="properties-div">
         KWQ Endpoints: <br>
-        REST: http://localhost:8080/api/kwq <br>
-        SWAGGER: http://localhost:8080/swagger/index.html <br>
-        OPEN-API-SPEC: http://localhost:8080/api/openapi.json <br>
-        ADMIN UI: http://localhost:8080/index.html <br>
+        <a class="link" href="http://localhost:8080/kwq" target="_blank">REST http://localhost:8080/kwq</a><br>
+        <a class="link" href="http://localhost:8080/swagger/index.html" target="_blank">SWAGGER: http://localhost:8080/swagger/index.html</a><br>
+        <a class="link" href="http://localhost:8080/openapi.json" target="_blank">OPEN-API-SPEC: http://localhost:8080/openapi.json</a><br>
+        <a class="link" href="http://localhost:8080/ui/index.html" target="_blank">ADMIN UI: http://localhost:8080/ui/index.html</a><br>
     </div>
 </div>
 

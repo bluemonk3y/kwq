@@ -24,6 +24,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 
+import java.net.MalformedURLException;
 import java.util.Properties;
 
 public class RestServerMain {
@@ -34,6 +35,13 @@ public class RestServerMain {
 
 
   public static void main(String[] args) throws Exception {
+    initialize();
+    start();
+    join();
+    destroy();
+  }
+
+  public static void initialize() throws MalformedURLException {
     server = new Server(8080);
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
@@ -42,21 +50,32 @@ public class RestServerMain {
     context.setWelcomeFiles(new String[]{"index.html"});
     server.setHandler(context);
 
-    // http://localhost:8080/api/kwq
-    ServletHolder apiServlet = context.addServlet(ServletContainer.class, "/api/*");
+    // http://localhost:8080/kwq
+    ServletHolder apiServlet = context.addServlet(ServletContainer.class, "/*");
 
-    apiServlet.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, KwqEndpoint.class.getCanonicalName());
-    apiServlet.setInitParameter(ServerProperties.APPLICATION_NAME, KwqEndpoint.class.getCanonicalName());
+    apiServlet.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, KwqRestEndpoint.class.getCanonicalName());
+    apiServlet.setInitParameter(ServerProperties.APPLICATION_NAME, KwqRestEndpoint.class.getCanonicalName());
     apiServlet.setInitOrder(0);
+    // configure swagger openapi path scanning
     apiServlet.setInitParameter(ServerProperties.PROVIDER_PACKAGES,
             "io.confluent.kwq,io.swagger.v3.jaxrs2.integration.resources");
 
-    // http://localhost:8080/api/openapi.json
+
+    // TODO: make openapi.json handle paths properly (i.e. /api/kwq )
+    // http://localhost:8080/openapi.json
     ServletHolder swaggerHolder = new ServletHolder("swaggerResources", DefaultServlet.class);
     swaggerHolder.setInitParameter("dirAllowed","true");
     swaggerHolder.setInitParameter("pathInfoOnly","true");
     swaggerHolder.setInitParameter("resourceBase", resourcesFolder + "/swagger");
     context.addServlet(swaggerHolder, "/swagger/*");
+
+    // TODO: make openapi.json handle paths properly (i.e. /api/kwq )
+    // http://localhost:8080/api/openapi.json
+    ServletHolder uiHolder = new ServletHolder("uiResources", DefaultServlet.class);
+    uiHolder.setInitParameter("dirAllowed","true");
+    uiHolder.setInitParameter("pathInfoOnly","true");
+    uiHolder.setInitParameter("resourceBase", resourcesFolder + "/ui");
+    context.addServlet(uiHolder, "/ui/*");
 
 
     // Lastly, set the default servlet for root content (always needed, to satisfy servlet spec)
@@ -71,18 +90,6 @@ public class RestServerMain {
     properties.put("bootstrap.servers", System.getProperty("bootstrap.servers", "localhost:9092"));
 
     registerLifecycleHandler(apiServlet, properties);
-
-    try {
-      server.start();
-      server.join();
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      System.exit(1);
-    }
-
-    finally {
-      server.destroy();
-    }
   }
 
   private static void registerLifecycleHandler(ServletHolder apiServlet, Properties properties) {
@@ -94,7 +101,7 @@ public class RestServerMain {
         } catch (Throwable badError) {
           System.err.println("Fatal error during startup");
           badError.printStackTrace();
-          server.destroy();
+//          server.destroy();
           System.exit(-1);
         }
       }
@@ -117,13 +124,33 @@ public class RestServerMain {
     });
   }
 
+
+  public static void start() {
+    try {
+      server.start();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      System.exit(1);
+    }
+  }
+  public static void destroy() {
+    server.destroy();
+  }
+
+  public static void join() {
+    try {
+      server.join();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      System.exit(1);
+    }
+  }
+
   public static void stop() {
     try {
       server.stop();
     } catch (Exception e) {
       e.printStackTrace();
     }
-    server.destroy();
   }
-
 }

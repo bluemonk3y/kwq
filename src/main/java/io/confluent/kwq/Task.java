@@ -18,6 +18,74 @@ package io.confluent.kwq;
 public class Task implements Comparable<Task> {
 
 
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+  }
+
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public void setSource(String source) {
+    this.source = source;
+  }
+
+  public void setStatus(Status status) {
+    if (status == Status.ALLOCATED) allocated_ts = System.currentTimeMillis();
+    if (status == Status.SUBMITTED) submitted_ts = System.currentTimeMillis();
+    if (status == Status.RUNNING) running_ts = System.currentTimeMillis();
+    if (status == Status.COMPLETED) completed_ts = System.currentTimeMillis();
+    this.status = status;
+  }
+
+  public void setWorker(String worker) {
+    this.worker = worker;
+  }
+
+  public void setRunCount(int runCount) {
+    this.runCount = runCount;
+  }
+
+  public void setWorkerEndpoint(String workerEndpoint) {
+    this.workerEndpoint = workerEndpoint;
+  }
+
+  public void setMeta(String meta) {
+    this.meta = meta;
+  }
+
+  public void setTimeoutSeconds(long timeoutSeconds) {
+    this.timeoutSeconds = timeoutSeconds;
+  }
+
+  public void setPayload(String payload) {
+    this.payload = payload;
+  }
+
+  public void setSubmitted_ts(long submitted_ts) {
+    this.submitted_ts = submitted_ts;
+  }
+
+  public void setAllocated_ts(long allocated_ts) {
+    this.allocated_ts = allocated_ts;
+  }
+
+  public void setRunning_ts(long running_ts) {
+    this.running_ts = running_ts;
+  }
+
+  public void setCompleted_ts(long completed_ts) {
+    this.completed_ts = completed_ts;
+  }
+
   public enum Status {
     SUBMITTED, ALLOCATED, RUNNING, COMPLETED, ERROR
   }

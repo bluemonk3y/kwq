@@ -1,6 +1,7 @@
 package io.confluent.kwq;
 
 import io.confluent.kwq.streams.TaskStatsCollector;
+import io.confluent.kwq.streams.model.TaskStats;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,7 +14,7 @@ public class TaskStatusImpl implements TaskStatus {
 
   private static final String TASK_STATUS_TOPIC = "taskStatusTopic";
   private final KafkaProducer<String, Task> producer;
-  private TaskStatsCollector statsTumblingWindow;
+  private TaskStatsCollector taskStatsCollector;
 
   public TaskStatusImpl(String bootstrapServers){
     producer = new KafkaProducer<>(producerProperties(bootstrapServers), new StringSerializer(), new TaskSerDes());
@@ -23,27 +24,32 @@ public class TaskStatusImpl implements TaskStatus {
 
   private void startStreamsJobs(String bootstrapServers) {
     // TODO: Inject collection of streams apps
-    statsTumblingWindow = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
-    statsTumblingWindow.start();
+    taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
+    taskStatsCollector.start();
   }
 
 
   @Override
-  public void add(Task task) {
-    producer.send(new ProducerRecord<>(task.getId(), task));
+  public void update(Task task) {
+    producer.send(new ProducerRecord<>(TASK_STATUS_TOPIC, task.getId(), task));
+  }
+
+  @Override
+  public TaskStats getStats() {
+    return taskStatsCollector.getCurrentStats();
   }
 
   public long getTotalThroughputPer() {
-    return statsTumblingWindow.getLastWindowStats().getTotal();
+    return taskStatsCollector.getLastWindowStats().getTotal();
   }
 //  public long getRunningCountPer() {
-//    return statsTumblingWindow.getRunning();
+//    return taskStatsCollector.getRunning();
 //  }
 //  public long getErrorCountPer() {
-//    return statsTumblingWindow.getError();
+//    return taskStatsCollector.getError();
 //  }
 //  public long getCompleted() {
-//    return statsTumblingWindow.getCompleted();
+//    return taskStatsCollector.getCompleted();
 //  }
 
 

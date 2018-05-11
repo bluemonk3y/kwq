@@ -24,4 +24,5 @@ interface Kwq {
 
   String status();
 
+  void submit(Task task);
 }

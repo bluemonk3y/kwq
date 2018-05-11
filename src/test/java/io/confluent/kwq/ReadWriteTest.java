@@ -33,7 +33,6 @@ public class ReadWriteTest {
   public void before() throws Exception {
     testHarness = new IntegrationTestHarness();
     testHarness.start();
-
   }
 
   @After

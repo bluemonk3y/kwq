@@ -15,6 +15,9 @@
  **/
 package io.confluent.kwq;
 
+import io.confluent.kwq.streams.model.TaskStats;
+
 interface TaskStatus {
-  void add(Task task);
+  void update(Task task);
+  TaskStats getStats();
 }
