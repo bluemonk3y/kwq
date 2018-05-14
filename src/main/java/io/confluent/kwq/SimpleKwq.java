@@ -110,24 +110,23 @@ public class SimpleKwq implements Kwq {
 
   private ConsumerAndRecords nextRecords;
 
-  public Task consume() {
-
+  synchronized public Task  consume() {
+    try {
     while (nextRecords == null || !nextRecords.iterator.hasNext()) {
       nextRecords = getRecordsFromHighestPriorityTopic();
       if (nextRecords == null || nextRecords.iterator.hasNext()) {
-        try {
+
           Thread.sleep(IDLE_WAIT_MS);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
       }
     }
     return nextRecords.iterator.next().value();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public void pause() {
-
   }
 
   @Override
@@ -136,16 +135,17 @@ public class SimpleKwq implements Kwq {
   }
 
   @Override
-  public void submit(Task task) {
+  synchronized public void submit(Task task) {
 
     // Note: acks = all = means all replica's have received and acknowledged all events
     int priority = task.getPriority();
     if (priority <= 1) priority = 1;
     if (priority > topics.size()) priority = topics.size();
     producer.send(new ProducerRecord<>(topics.get(priority), task.getId(), task));
+    producer.flush();
   }
 
-  private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
+   private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
     ConsumerRecords<String,Task> results;
     for (int i = consumers.size()-1; i >= 0; i--) {
       KafkaConsumer<String, Task> consumer = consumers.get(i);
@@ -162,7 +162,6 @@ public class SimpleKwq implements Kwq {
     final Iterator<ConsumerRecord<String, Task>> iterator;
 
     public ConsumerAndRecords(KafkaConsumer<String, Task> consumer, Iterator<ConsumerRecord<String, Task>> iterator) {
-
       this.consumer = consumer;
       this.iterator = iterator;
     }

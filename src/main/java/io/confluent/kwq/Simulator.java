@@ -15,17 +15,22 @@
  **/
 package io.confluent.kwq;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 public class Simulator {
+  static Logger log = LoggerFactory.getLogger(Simulator.class);
   private Kwq kwq;
   private TaskStatus taskStatus;
 
@@ -36,37 +41,49 @@ public class Simulator {
 
   public int simulate(String groupId, int numberOfTasks, int durationSeconds, int numberOfWorkers) {
 
-    System.out.println("Running simulation:" + groupId);
-    ScheduledExecutorService scheduler = newScheduledThreadPool(5);
-    ExecutorService fixedThreadPool = newFixedThreadPool(numberOfWorkers);
-    String sourceTag = new Date().toString();
-    for (int i = 0; i < numberOfTasks; i++) {
-      Task task = new Task(i + "-" + sourceTag, groupId, (i % 5)+1, "tag-" + groupId, "source-" + sourceTag, "payload", Task.Status.ALLOCATED, "worker", "worker-ep", 0, "meta", 60, System.currentTimeMillis(), System.currentTimeMillis(), 0, 0);
-      System.out.println(Thread.currentThread().getName() + " Submitting:" + task.getId());
-      kwq.submit(task);
-      taskStatus.update(task);
-      fixedThreadPool.submit(() -> simulateWorker(durationSeconds, scheduler));
-    }
-    return 0;
-  }
-
-  public void simulateWorker(int durationSeconds, ScheduledExecutorService scheduler) {
-    ScheduledFuture<Task> taskScheduledFuture = scheduler.schedule(() -> kwq.consume(), 1, TimeUnit.MILLISECONDS);
-
     try {
-      System.out.println("Worker requesting task:");
-      Task updatedTask = taskScheduledFuture.get();
-      System.out.println("Worker Consumed:" + updatedTask.getId());
-
-      updatedTask.setStatus(Task.Status.COMPLETED);
-      scheduler.schedule(() -> {
-        System.out.println("Completed:" + updatedTask.getId());
-        kwq.submit(updatedTask);
-      }, durationSeconds, TimeUnit.SECONDS);
+      Thread.sleep(1000);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    } catch (ExecutionException e) {
+    }
+    log.info("Running simulation:" + groupId + " Tasks:" + numberOfTasks + " duration:" + durationSeconds + " workers:" + numberOfWorkers);
+    ScheduledExecutorService workerRunPool = newScheduledThreadPool(numberOfWorkers);
+    ExecutorService workerRequestPool = newFixedThreadPool(numberOfWorkers);
+    String sourceTag = "tag-" + SimpleDateFormat.getDateInstance().format(new Date());
+    final AtomicInteger completeCount = new AtomicInteger();
+    final AtomicInteger acceptCount = new AtomicInteger();
+    final AtomicInteger waitCount = new AtomicInteger();
+    for (int i = 0; i < numberOfTasks; i++) {
+      Task task = new Task(i + "-" + groupId, groupId, (i % 5)+1, "tag-" + groupId, "source-" + sourceTag, "payload", Task.Status.ALLOCATED, "worker", "worker-ep", 0, "meta", 60, System.currentTimeMillis(), System.currentTimeMillis(), 0, 0);
+      log.info(" Submitting:" + task.getId() + " Task:" + i + " of " + numberOfTasks);
+      kwq.submit(task);
+    }
+
+    log.info("=========Consuming tasks ");
+    for (int i = 0; i < numberOfTasks; i++) {
+      workerRequestPool.submit(() -> simulateWorker(durationSeconds, workerRunPool, completeCount, acceptCount, waitCount));
+    }
+
+    workerRequestPool.shutdown();
+    try {
+      workerRequestPool.awaitTermination(1, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    return completeCount.get();
+  }
+
+  public void simulateWorker(int durationSeconds, ScheduledExecutorService scheduler, AtomicInteger completeCount, AtomicInteger acceptCount, AtomicInteger waitCount) {
+    log.info(" Worker wait:{}", waitCount.incrementAndGet());
+    Task task = kwq.consume();
+
+    log.info(" Worker consumed Task:{} Priority:{} Accept:", task.getId(), task.getPriority(), acceptCount.incrementAndGet());
+
+    // simulate the task duration using the scheduler
+    scheduler.schedule(() -> {
+      log.info(" Completed:{} Count:{} Priority:{}", task.getId(), completeCount.incrementAndGet(), task.getPriority());
+      task.setStatus(Task.Status.COMPLETED);
+      taskStatus.update(task);
+    }, durationSeconds, TimeUnit.SECONDS);
   }
 }

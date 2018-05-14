@@ -26,6 +26,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 public class RestServiceTest {
 
@@ -60,11 +61,25 @@ public class RestServiceTest {
     Thread.sleep(600 * 1000);
   }
 
+
+  @Test
+  public void runSimulation() throws Exception {
+
+    Client client = ClientBuilder.newClient();
+
+    WebTarget target = client.target("http://localhost:8080").path("/kwq/simulate/{numberOfTasks}/{durationSeconds}/{numberOfWorkers}");
+    target = target.resolveTemplate("numberOfTasks", "500");
+    target = target.resolveTemplate("durationSeconds", "1");
+    target = target.resolveTemplate("numberOfWorkers", "50");
+    Response put = target.request(MediaType.APPLICATION_JSON_TYPE).get();
+
+    Assert.assertNotNull("Should have created KWQ instance", put);
+  }
   @Test
   public void testGetTask() throws Exception {
 
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target("http://localhost:8080").path("api/kwq");
+    WebTarget target = client.target("http://localhost:8080").path("/kwq");
     Task response = target.request(MediaType.APPLICATION_JSON_TYPE).get(Task.class);
 
     Assert.assertNotNull("Should have created KSWQ instance", response);

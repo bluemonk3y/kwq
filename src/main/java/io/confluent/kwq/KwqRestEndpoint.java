@@ -122,7 +122,7 @@ public class KwqRestEndpoint {
     return kwqInstance.getTaskStatus().getStats();
   }
 
-  @PUT
+  @GET
   @Path("simulate/{numberOfTasks}/{durationSeconds}/{numberOfWorkers}")
   @Operation(summary = "Simulate a workload against the Task Queue",
           tags = {"tasks"},
