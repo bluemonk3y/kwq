@@ -108,46 +108,6 @@ function isPrimitive(test) {
     return (test !== Object(test));
 };
 
-function randomNumber(min, max) {
-			return Math.random() * (max - min) + min;
-}
-
-function randomBar(date, lastClose) {
-    var open = randomNumber(lastClose * 0.95, lastClose * 1.05);
-    var close = randomNumber(open * 0.95, open * 1.05);
-    return {
-        t: date.valueOf(),
-        y: close
-    };
-}
-
-function createTable2() {
-$.ajax({
-            url : '/AOS-project/destination',
-            type : 'GET',
-            dataType : 'json',
-            success : function(data) {
-                assignToEventsColumns(data);
-            }
-        });
-
-        function assignToEventsColumns(data) {
-            var table = $('#example').dataTable({
-                "bAutoWidth" : false,
-                "aaData" : data,
-                "columns" : [ {
-                    "data" : "id"
-                }, {
-                    "data" : "group"
-                }, {
-                    "data" : "lat"
-                }, {
-                    "data" : "lon"
-                } ]
-            })
-        }}
-
-
 function createTable() {
     var dataSet = []
     taskTable = $('#taskTable').DataTable( {
@@ -195,7 +155,6 @@ function refreshTable() {
           url:"/kwq/tasks",
           success:function(data){
                 taskTable.clear();
-                // TODO: display 'duration'
                 data.forEach(e => {
                     e.duration = ""
                     if (e.submitted_ts != 0) { e.submitted = moment(e.submitted_ts).format("HH:mm:ss") }
@@ -218,6 +177,19 @@ function refreshTable() {
             return false;
           }
     })
+}
+
+function randomNumber(min, max) {
+			return Math.random() * (max - min) + min;
+}
+
+function randomBar(date, lastClose) {
+    var open = randomNumber(lastClose * 0.95, lastClose * 1.05);
+    var close = randomNumber(open * 0.95, open * 1.05);
+    return {
+        t: date.valueOf(),
+        y: 0//close
+    };
 }
 
 function createChart() {
@@ -261,6 +233,46 @@ function createChart() {
         }
     };
 chart = new Chart(ctx, cfg);
+}
+
+function removeChartData(chart) {
+    chart.data.labels.pop();
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.pop();
+    });
+    chart.update();
+}
+
+function addChartData(label, data) {
+    //chart.data.labels.push(label);
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+    });
+    chart.update();
+}
+
+
+/**
+{
+  "total": 0,
+  "running": 0,
+  "error": 0,
+  "completed": 0
+}
+**/
+function refreshChart() {
+    $.get({
+          url:"/kwq/stats",
+          success:function(data){
+                data.forEach(e => {
+                    chart.data.datasets.forEach((dataset) => {
+                        dataset.data.push(e);
+                    });
+                })
+                chart.update();
+            return false;
+          }
+    })
 }
 
 function createStuff() {

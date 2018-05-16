@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskStatusImpl implements TaskStatus {
 
-  private static final String TASK_STATUS_TOPIC = "taskStatusTopic";
+  private static final String TASK_STATUS_TOPIC = "kwqTaskStatus";
   public static final int MAX_TRACKING_TASK_COUNT = Integer.getInteger("task.history.size", 5000);
   private final KafkaProducer<String, Task> producer;
   private final ConcurrentLinkedQueue<Task> recentTasks = new ConcurrentLinkedQueue<>();;
@@ -29,7 +29,6 @@ public class TaskStatusImpl implements TaskStatus {
   }
 
   private void startStreamsJobs(String bootstrapServers) {
-    // TODO: Inject collection of streams apps
     taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
     taskStatsCollector.start();
   }
@@ -38,9 +37,7 @@ public class TaskStatusImpl implements TaskStatus {
   @Override
   public void update(Task task) {
     producer.send(new ProducerRecord<>(TASK_STATUS_TOPIC, task.getId(), task));
-
     manageTaskHistoryQueue(task);
-
   }
 
   public void manageTaskHistoryQueue(Task task) {

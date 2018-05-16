@@ -37,6 +37,7 @@ public class TaskStatsCollector {
   private TaskStats currentWindowStats;
   private final StreamsConfig streamsConfig;
   private long lastWindowStart = -1;
+  private KafkaStreams streams;
 
   public TaskStatsCollector(String taskStatusTopic, StreamsConfig streamsConfig, int windowDurationS){
     this.streamsConfig = streamsConfig;
@@ -76,8 +77,11 @@ public class TaskStatsCollector {
   }
 
   public void start() {
-    KafkaStreams streams = new KafkaStreams(topology, streamsConfig);
-        streams.start();
+    streams = new KafkaStreams(topology, streamsConfig);
+    streams.start();
+  }
+  public void stop() {
+    streams.close();
   }
 
   public TaskStats getLastWindowStats() {
