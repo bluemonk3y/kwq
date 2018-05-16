@@ -1,107 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>KWQ Experimental UI</title>
-    <script src="static/ksql.js"></script>
-    <script src="static/jsontoyaml.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.9/ace.js"></script>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Apache Kafka Worker Queue - KWQ">
+    <meta name="author" content="">
+    <!--<link rel="icon" href="../../../../favicon.ico">-->
 
-    <link rel="stylesheet" type="text/css" href="static/ksql.css">
-    <style>
+    <title>KWQ - Apache Kafka Worker Queue</title>
 
-    </style>
-</head>
-<body>
+    <!-- Bootstrap core CSS -->
+    <!--<link href="../../../../dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" crossorigin="anonymous">
 
 
-<div id="ksql-header" style="width:100%">
-    <div id="logo"><img src="static/logo.png?raw=true" alt="logo@3x.png"> </div>
-    <div style="width:70%; float:left;">
-        <h1 id="title">KWQ</h1>
-        <h5 id="sub-title">experimental ui</h5>
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" style="padding-top:2px;padding-bottom:2px;" href="#">
+        <img  src="static/logo.png?raw=true" alt="logo@3x.png">
+      KWQ</a>
+      <!--<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">LOGO</a>-->
+
+      <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+      <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+          <a class="nav-link" href="#">Sign out</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active" href="#">
+                  <span data-feather="home"></span>
+                  Job status <span class="sr-only">(current)</span>
+                </a>
+              </li>
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="file"></span>-->
+                  <!--Orders-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="shopping-cart"></span>-->
+                  <!--Products-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="users"></span>-->
+                  <!--Customers-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="bar-chart-2"></span>-->
+                  <!--Reports-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="layers"></span>-->
+                  <!--Integrations-->
+                <!--</a>-->
+              <!--</li>-->
+            </ul>
+
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+              <span>Saved reports</span>
+              <a class="d-flex align-items-center text-muted" href="#">
+                <span data-feather="plus-circle"></span>
+              </a>
+            </h6>
+            <ul class="nav flex-column mb-2">
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="file-text"></span>
+                  Current month
+                </a>
+              </li>
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="file-text"></span>-->
+                  <!--Last quarter-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="file-text"></span>-->
+                  <!--Social engagement-->
+                <!--</a>-->
+              <!--</li>-->
+              <!--<li class="nav-item">-->
+                <!--<a class="nav-link" href="#">-->
+                  <!--<span data-feather="file-text"></span>-->
+                  <!--Year-end sale-->
+                <!--</a>-->
+              <!--</li>-->
+            </ul>
+          </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h5 >Activity</h5>
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <button class="btn btn-sm btn-outline-secondary" id="refreshTable">Refresh</button>
+                <button class="btn btn-sm btn-outline-secondary">Export</button>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                <span data-feather="calendar"></span>
+                This week
+              </button>
+            </div>
+          </div>
+
+          <canvas class="my-4 w-100" id="mainChart" width="900" height="380"></canvas>
+
+          <h5>Recent task updates (5000)</h5>
+          <div class="table-responsive">
+            <table id="taskTable" class="display" width="100%"></table>
+          </div>
+        </main>
+      </div>
     </div>
-    <div style="width:20%; float:right;">
-        <h4 id="copyright" style="text-align: right;" class="hint">(c) Confluent Inc., KSQL server v$version</h4>
-    </div>
-</div>
 
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
 
-<div id="command-row">
-    <div id="properties-div">
-        KWQ Endpoints: <br>
-        <a class="link" href="http://localhost:8080/kwq" target="_blank">REST http://localhost:8080/kwq</a><br>
-        <a class="link" href="http://localhost:8080/swagger/index.html" target="_blank">SWAGGER: http://localhost:8080/swagger/index.html</a><br>
-        <a class="link" href="http://localhost:8080/openapi.json" target="_blank">OPEN-API-SPEC: http://localhost:8080/openapi.json</a><br>
-        <a class="link" href="http://localhost:8080/ui/index.html" target="_blank">ADMIN UI: http://localhost:8080/ui/index.html</a><br>
-    </div>
-</div>
+    <script src="static/kwq.js"></script>
 
-<div>
-
-    <div id="templates">
-        <button class="command-button" onclick="sendRequest('/ksql', 'show properties;')">SHOW PROPERTIES</button>
-        <button class="command-button" onclick="sendRequest('/ksql', 'show topics;')">SHOW TOPICS</button>
-        <button class="command-button" onclick="sendRequest('/ksql', 'show streams;')">SHOW STREAMS</button>
-        <button class="command-button" onclick="sendRequest('/ksql', 'show tables;')">SHOW TABLES</button>
-        <button class="command-button" onclick="sendRequest('/ksql', 'show queries;')">SHOW QUERIES</button>
-        <button class="command-button" onclick="editor.setValue('CREATE STREAM MyStream (_time bigint, time varchar, name varchar, request varchar, status int) WITH (kafka_topic = \'kafka_topic\', value_format = \'json\');')">CREATE STREAM [...]</button>
-        <button class="command-button" onclick="editor.setValue('CREATE TABLE events_per_min AS SELECT userid, COUNT(*) AS events FROM ksql_stream WINDOW TUMBLING (SIZE 10 SECONDS) GROUP BY userid;')">CREATE TABLE [...]</button>
-        <button class="command-button" onclick="editor.setValue('SELECT * from MyStream_OR_Table WHERE ;')">SELECT * FROM [..]</button>
-        <button class="command-button" onclick="editor.setValue('PRINT \'topic\' FROM BEGINNING;')">PRINT my_topic [..]</button>
-        <button class="command-button" onclick="editor.setValue('DESCRIBE EXTENDED MyStream_OR_Table;')">DESCRIBE EXTENDED [..]</button>
-        <button class="command-button" onclick="editor.setValue('EXPLAIN MyQueryId;')">EXPLAIN MyQueryId [..]</button>
-
-        <a class="link" href="https://github.com/confluentinc/ksql/blob/master/docs/syntax-reference.md#syntax-reference" target="_blank">
-            View the syntax guide
-        </a>
-        <a class="link" href="https://github.com/confluentinc/ksql/blob/master/docs/examples.md#examples" target="_blank">
-            View KSQL examples
-        </a>
-    </div>
-
-
-    <div id="response-header">
-        <div class="section-title" style="width:30%">Output:</div>
-        <div style="width:15%;float: right; text-align: right;"><font class="hint" size="1">Hint: press CTRL-F to find text</font></div>
-        <div id="selector">Format:
-            <label>
-                <input checked type="radio" name="output" value="tabular" onchange="updateFormat(renderTabular);"> Tabular
-            </label>
-            <label>
-                <input type="radio" name="output" value="prettyjson" onchange="updateFormat(renderPrettyJson);"> JSON (pretty)
-            </label>
-            <label>
-                <input type="radio" name="output" value="compactjson" onchange="updateFormat(renderCompactJson);"> JSON (compact)
-            </label>
-            <label>
-                <input type="radio" name="output" value="yaml" onchange="updateFormat(renderYaml);"> YAML
-            </label>
-
-        </div>
-
-
-    </div>
-    <div id="response" class="response"></div>
-</div>
-
-
-<script>
-        console.log("Loading editor");
-        editor = ace.edit("editor");
-        editor.setTheme("ace/theme/chaos");
-        editor.session.setMode("ace/mode/sql");
-        editor.session.setUseWrapMode(true);
-        editor.setShowPrintMargin(false);
-
-        console.log("Loading editor");
-        response = ace.edit("response");
-        response.setTheme("ace/theme/chaos");
-        response.session.setMode("ace/mode/json");
-        response.setShowPrintMargin(false);
-
-        displayServerVersion()
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
     </script>
 
-</body>
+    <!-- Graphs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+
+  </body>
 </html>

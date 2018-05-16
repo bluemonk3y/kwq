@@ -137,7 +137,7 @@ public class SimpleKwq implements Kwq {
   @Override
   synchronized public void submit(Task task) {
 
-    // Note: acks = all = means all replica's have received and acknowledged all events
+    // Note: acks = all = means all replica's have received and acknowledged all events - this is slow but accurate...
     int priority = task.getPriority();
     if (priority <= 1) priority = 1;
     if (priority > topics.size()) priority = topics.size();
@@ -145,7 +145,7 @@ public class SimpleKwq implements Kwq {
     producer.flush();
   }
 
-   private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
+  private ConsumerAndRecords getRecordsFromHighestPriorityTopic() {
     ConsumerRecords<String,Task> results;
     for (int i = consumers.size()-1; i >= 0; i--) {
       KafkaConsumer<String, Task> consumer = consumers.get(i);

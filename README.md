@@ -56,10 +56,10 @@ ATM - execute the io.confluent.kwq.RestServerMain.class it runs an embedded Jers
 
  ## Endpoints
   
- - REST: http://localhost:8080/api/kwq 
+ - REST: http://localhost:8080/kwq 
  - SWAGGER: http://localhost:8080/swagger/index.html Submit test tasks and check status
- - OPEN-API-SPEC: http://localhost:8080/api/openapi.json
- - ADMIN UI: http://localhost:8080/index.html (placeholder for now)
+ - OPEN-API-SPEC: http://localhost:8080/openapi.json
+ - ADMIN UI: http://localhost:8080/ui/index.html
  
  ## API
 

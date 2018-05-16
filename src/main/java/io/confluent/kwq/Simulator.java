@@ -57,6 +57,8 @@ public class Simulator {
       Task task = new Task(i + "-" + groupId, groupId, (i % 5)+1, "tag-" + groupId, "source-" + sourceTag, "payload", Task.Status.ALLOCATED, "worker", "worker-ep", 0, "meta", 60, System.currentTimeMillis(), System.currentTimeMillis(), 0, 0);
       log.info(" Submitting:" + task.getId() + " Task:" + i + " of " + numberOfTasks);
       kwq.submit(task);
+      task.setStatus(Task.Status.ALLOCATED);
+      taskStatus.update(task);
     }
 
     log.info("=========Consuming tasks ");
@@ -75,7 +77,11 @@ public class Simulator {
 
   public void simulateWorker(int durationSeconds, ScheduledExecutorService scheduler, AtomicInteger completeCount, AtomicInteger acceptCount, AtomicInteger waitCount) {
     log.info(" Worker wait:{}", waitCount.incrementAndGet());
+
     Task task = kwq.consume();
+    task.setStatus(Task.Status.RUNNING);
+    taskStatus.update(task);
+
 
     log.info(" Worker consumed Task:{} Priority:{} Accept:", task.getId(), task.getPriority(), acceptCount.incrementAndGet());
 

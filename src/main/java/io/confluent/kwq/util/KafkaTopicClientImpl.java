@@ -15,7 +15,6 @@
  **/
 package io.confluent.kwq.util;
 
-import io.confluent.ksql.util.KsqlException;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DeleteTopicsResult;
@@ -144,7 +143,7 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
       }
     }
     if (!failList.isEmpty()) {
-      throw new KsqlException("Failed to clean up topics: " + failList.stream()
+      throw new RuntimeException("Failed to clean up topics: " + failList.stream()
               .collect(Collectors.joining(",")));
     }
   }
@@ -199,12 +198,12 @@ public class KafkaTopicClientImpl implements KafkaTopicClient {
 
       } else {
         log.warn("No available broker found to fetch config info.");
-        throw new KsqlException("Could not fetch broker information. KSQL cannot initialize "
+        throw new RuntimeException("Could not fetch broker information. KSQL cannot initialize "
                 + "AdminClient.");
       }
     } catch (InterruptedException | ExecutionException ex) {
       log.error("Failed to initialize TopicClient: {}", ex.getMessage());
-      throw new KsqlException("Could not fetch broker information. KSQL cannot initialize "
+      throw new RuntimeException("Could not fetch broker information. KSQL cannot initialize "
               + "AdminClient.", ex);
     }
   }

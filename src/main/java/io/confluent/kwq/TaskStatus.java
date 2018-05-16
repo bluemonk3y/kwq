@@ -17,7 +17,11 @@ package io.confluent.kwq;
 
 import io.confluent.kwq.streams.model.TaskStats;
 
+import java.util.List;
+
 interface TaskStatus {
   void update(Task task);
   TaskStats getStats();
+
+  List<Task> tasks();
 }

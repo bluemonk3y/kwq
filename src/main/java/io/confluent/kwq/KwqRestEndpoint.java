@@ -32,6 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.Date;
+import java.util.List;
 
 @Path("kwq")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -120,6 +121,18 @@ public class KwqRestEndpoint {
           })
   public TaskStats getTaskStats() {
     return kwqInstance.getTaskStatus().getStats();
+  }
+
+  @GET
+  @Path("tasks")
+  @Operation(summary = "Return the recent set of Tasks",
+          tags = {"tasks"},
+          responses = {
+                  @ApiResponse(content = @Content(schema = @Schema(implementation = List.class))),
+                  @ApiResponse(responseCode = "405", description = "Invalid input")
+          })
+  public List<Task> getTasks() {
+    return kwqInstance.getTaskStatus().tasks();
   }
 
   @GET
