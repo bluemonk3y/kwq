@@ -2,34 +2,39 @@ package io.confluent.kwq;
 
 import io.confluent.kwq.streams.TaskStatsCollector;
 import io.confluent.kwq.streams.model.TaskStats;
+import io.confluent.kwq.util.KafkaTopicClient;
+import io.confluent.kwq.util.LockfreeConcurrentQueue;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskStatusImpl implements TaskStatus {
 
   private static final String TASK_STATUS_TOPIC = "kwqTaskStatus";
   public static final int MAX_TRACKING_TASK_COUNT = Integer.getInteger("task.history.size", 5000);
   private final KafkaProducer<String, Task> producer;
-  private final ConcurrentLinkedQueue<Task> recentTasks = new ConcurrentLinkedQueue<>();;
-  private final AtomicInteger recentTasksSize = new AtomicInteger();
+  private KafkaTopicClient topicClient;
+  private final Queue<Task> recentTasks = new LockfreeConcurrentQueue<>();
   private TaskStatsCollector taskStatsCollector;
 
-  public TaskStatusImpl(String bootstrapServers){
+  public TaskStatusImpl(String bootstrapServers, KafkaTopicClient topicClient, int partitions, short replicationFactor){
     producer = new KafkaProducer<>(producerProperties(bootstrapServers), new StringSerializer(), new TaskSerDes());
-    startStreamsJobs(bootstrapServers);
+    this.topicClient = topicClient;
+    startStreamsJobs(bootstrapServers, partitions, replicationFactor);
   }
 
-  private void startStreamsJobs(String bootstrapServers) {
-    taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 60);
+  private void startStreamsJobs(String bootstrapServers, int partitions, short replicationFactor) {
+
+    topicClient.createTopic(TASK_STATUS_TOPIC, partitions, replicationFactor);
+    taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 10);
     taskStatsCollector.start();
   }
 
@@ -43,10 +48,8 @@ public class TaskStatusImpl implements TaskStatus {
   public void manageTaskHistoryQueue(Task task) {
     recentTasks.add(task);
     // Note: we use an recentTasksSize because recentTasks.size() iterates the collection
-    recentTasksSize.incrementAndGet();
-    if (recentTasksSize.get() > MAX_TRACKING_TASK_COUNT) {
-      recentTasks.poll();
-      recentTasksSize.decrementAndGet();
+    if (recentTasks.size() > MAX_TRACKING_TASK_COUNT) {
+      recentTasks.remove();
     }
   }
 
@@ -56,8 +59,8 @@ public class TaskStatusImpl implements TaskStatus {
   }
 
   @Override
-  public TaskStats getStats() {
-    return taskStatsCollector.getCurrentStats();
+  public List<TaskStats> getStats() {
+    return taskStatsCollector.getStats();
   }
 
   private Properties producerProperties(String bootstrapServers) {
@@ -72,8 +75,9 @@ public class TaskStatusImpl implements TaskStatus {
     Properties config = new Properties();
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
     config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, StringSerializer.class);
+    config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
     config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, TaskSerDes.class);
+    config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 5000);
     return new StreamsConfig(config);
   }
 }

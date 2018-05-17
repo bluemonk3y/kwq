@@ -83,7 +83,7 @@ public class Simulator {
     taskStatus.update(task);
 
 
-    log.info(" Worker consumed Task:{} Priority:{} Accept:", task.getId(), task.getPriority(), acceptCount.incrementAndGet());
+    log.info(" Worker consumed Task:{} Priority:{} #Accept:{}", task.getId(), task.getPriority(), acceptCount.incrementAndGet());
 
     // simulate the task duration using the scheduler
     scheduler.schedule(() -> {

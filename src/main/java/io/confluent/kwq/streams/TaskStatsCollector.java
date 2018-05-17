@@ -17,6 +17,7 @@ package io.confluent.kwq.streams;
 
 import io.confluent.kwq.Task;
 import io.confluent.kwq.streams.model.TaskStats;
+import io.confluent.kwq.util.LockfreeConcurrentQueue;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -27,25 +28,31 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class TaskStatsCollector {
+  private static final Logger log = LoggerFactory.getLogger(TaskStatsCollector.class);
 
+  public static final int STATS_RETENTION = 2000;
   private final Topology topology;
-  private int windowDurationS = 5;
-  private TaskStats lastWindowStats;
   private TaskStats currentWindowStats;
   private final StreamsConfig streamsConfig;
-  private long lastWindowStart = -1;
   private KafkaStreams streams;
+  private final Queue<TaskStats> stats = new LockfreeConcurrentQueue<>();
 
-  public TaskStatsCollector(String taskStatusTopic, StreamsConfig streamsConfig, int windowDurationS){
+  public TaskStatsCollector(final String taskStatusTopic, final StreamsConfig streamsConfig, final int windowDurationS){
     this.streamsConfig = streamsConfig;
-    this.windowDurationS = windowDurationS;
-    this.topology = buildTopology(taskStatusTopic);
+    this.topology = buildTopology(taskStatusTopic, windowDurationS);
   }
 
-  private Topology buildTopology(String taskStatusTopic) {
+  private Topology buildTopology(final String taskStatusTopic, final int windowDurationS) {
     StreamsBuilder builder = new StreamsBuilder();
     KStream<String, Task> tasks = builder.stream(taskStatusTopic);
 
@@ -60,19 +67,21 @@ public class TaskStatsCollector {
 
     /**
      * We only want to view the final value of each window, and not every CDC event, so use a window threshold.
-     * Note: this is problematic when data stops and we could potentially use a 'future' to manage missing adjacent window - we really need a callback on window expiry
      */
     windowedTaskStatsKTable.toStream().foreach( (key, value) -> {
-      if (key.window().start() != lastWindowStart) {
-          lastWindowStart = key.window().start();
-          // publish the last counted value
-          lastWindowStats = currentWindowStats;
-//          TODO: Publish stats onto a Topic for visualization via Grafana (store in elastic or influx)
+      log.debug("Processing:{} time:{}", value, key.window().end());
+      if (currentWindowStats != null && key.window().end() != currentWindowStats.getTime()) {
+          log.debug("Adding:{} time:{}", currentWindowStats, key.window().end());
+          stats.add(currentWindowStats);
+          if (stats.size() > STATS_RETENTION) {
+            stats.remove();
+          }
+          // TODO: Publish stats onto a Topic for visualization via Grafana (store in elastic or influx)
         }
-        currentWindowStats = value;
+      currentWindowStats = value;
+      currentWindowStats.setTime(key.window().end());
       }
     );
-
     return builder.build();
   }
 
@@ -84,11 +93,11 @@ public class TaskStatsCollector {
     streams.close();
   }
 
-  public TaskStats getLastWindowStats() {
-    return lastWindowStats;
-  }
-  public TaskStats getCurrentStats() {
-    return currentWindowStats;
+  public List<TaskStats> getStats() {
+    CopyOnWriteArrayList results = new CopyOnWriteArrayList<>(stats);
+    results.add(currentWindowStats);
+    Collections.reverse(results);
+    return results;
   }
 
   public Topology getTopology() {

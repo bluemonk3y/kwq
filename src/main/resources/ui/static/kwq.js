@@ -6,6 +6,16 @@ String.prototype.replaceAll = function(search, replacement) {
     return target.split(search).join(replacement);
 };
 
+window.chartColors = {
+	red: 'rgb(255, 99, 132)',
+	orange: 'rgb(255, 159, 64)',
+	yellow: 'rgb(255, 205, 86)',
+	green: 'rgb(75, 192, 192)',
+	blue: 'rgb(54, 162, 235)',
+	purple: 'rgb(153, 102, 255)',
+	grey: 'rgb(201, 203, 207)'
+};
+
 
 
 function displayServerVersion() {
@@ -57,50 +67,6 @@ function cancelRequest() {
     //responseElement.innerHTML = response;
 }
 
-function renderResponse() {
-    var renderedBody = '';
-    var parsedJson = JSON.parse(rawResponseBody);
-//    if (streamedResponse) {
-//        // Used to try to report JSON parsing errors to the user, but
-//        // since printed topics don't have a consistent format, just
-//        // have to assume that any parsing error is for that reason and
-//        // we can just stick with the raw message body for the output
-//        var splitBody = rawResponseBody.split('\n');
-//        for (var i = 0; i < splitBody.length; i++) {
-//            var line = splitBody[i].trim();
-//            if (line !== '') {
-//                try {
-//                    var parsedJson = JSON.parse(line);
-//                    renderedBody += renderFunction(parsedJson);
-//                } catch (SyntaxError) {
-//                    renderedBody += line;
-//                }
-//                renderedBody += '\n';
-//            }
-//        }
-//    } else {
-//        try {
-//            var parsedJson = JSON.parse(rawResponseBody);
-//            renderedBody = renderFunction(parsedJson);
-//
-//            if (renderedBody == "") {
-//                updateFormat(renderPrettyJson)
-//                renderFunction = renderTabular;
-//                return;
-//            }
-//
-//
-//        } catch (SyntaxError) {
-//            console.log('Error parsing response JSON:' + SyntaxError.message);
-//            console.log(SyntaxError.stack);
-//            renderedBody = rawResponseBody;
-//        }
-//    }
-//    response.setValue(renderedBody);
-//    response.gotoLine(1);
-}
-
-
 function upperCaseFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -147,7 +113,10 @@ function createTable() {
 
                          ]
     } );
-    $('#refreshTable').click(refreshTable)
+    $('#refreshTable').click(function() {
+        refreshTable();
+        refreshChart();
+    })
 }
 
 function refreshTable() {
@@ -192,6 +161,7 @@ function randomBar(date, lastClose) {
     };
 }
 
+// TODO: add labels dynamically https://github.com/chartjs/Chart.js/issues/2738
 function createChart() {
     console.log("Loading mainChart")
     var date = moment().subtract(1, 'hour');
@@ -202,17 +172,81 @@ function createChart() {
         data.push(randomBar(date, data[data.length - 1].y));
     }
 
-    // TODO add labels dynamically https://github.com/chartjs/Chart.js/issues/2738
+    //var data = [];
     var ctx = document.getElementById('mainChart').getContext('2d');
     var cfg = {
         type: 'bar',
         data: {
+        /**
+        {
+          "total": 0,
+          "submitted": 0,
+          "allocated": 0,
+          "running": 0,
+          "error": 0,
+          "completed": 0,
+          "time": 0
+        }
+        **/
             datasets: [{
-                label: 'Task status',
+                label: 'Total',
                 data: data,
                 type: 'line',
                 pointRadius: 1,
                 fill: false,
+                lineTension: 0,
+                borderWidth: 2
+            },
+            {
+                label: 'Submitted',
+                data: data,
+                type: 'line',
+                pointRadius: 1,
+                fill: false,
+                        backgroundColor: window.chartColors.yellow,
+                        borderColor: window.chartColors.yellow,
+
+                lineTension: 0,
+                borderWidth: 2
+            },{
+                label: 'Allocated',
+                data: data,
+                type: 'line',
+                pointRadius: 1,
+                fill: false,
+                backgroundColor: window.chartColors.orange,
+                borderColor: window.chartColors.orange,
+                lineTension: 0,
+                borderWidth: 2
+            },{
+                label: 'Running',
+                data: data,
+                type: 'line',
+                pointRadius: 1,
+                fill: false,
+                backgroundColor: window.chartColors.blue,
+                borderColor: window.chartColors.blue,
+                lineTension: 0,
+                borderWidth: 2
+            }, {
+                label: 'Error',
+                data: data,
+                type: 'line',
+                pointRadius: 1,
+                fill: false,
+                backgroundColor: window.chartColors.red,
+                borderColor: window.chartColors.red,
+                lineTension: 0,
+                borderWidth: 2
+            },
+            {
+                label: 'Complete',
+                data: data,
+                type: 'line',
+                pointRadius: 1,
+                fill: false,
+                backgroundColor: window.chartColors.green,
+                borderColor: window.chartColors.green,
                 lineTension: 0,
                 borderWidth: 2
             }]
@@ -255,19 +289,56 @@ function addChartData(label, data) {
 /**
 {
   "total": 0,
+  "submitted": 0,
+  "allocated": 0,
   "running": 0,
   "error": 0,
-  "completed": 0
+  "completed": 0,
+  "time": 0
 }
 **/
 function refreshChart() {
     $.get({
           url:"/kwq/stats",
           success:function(data){
+          chart.data.datasets[0].data = []
+          chart.data.datasets[1].data = []
+          chart.data.datasets[2].data = []
+          chart.data.datasets[3].data = []
+          chart.data.datasets[4].data = []
+          chart.data.datasets[5].data = []
                 data.forEach(e => {
-                    chart.data.datasets.forEach((dataset) => {
-                        dataset.data.push(e);
-                    });
+                    console.log(e)
+                    var total = new Object();
+                    total.y = e.total;
+                    total.t = e.time;
+
+                    var submitted = new Object();
+                    submitted.y = e.submitted;
+                    submitted.t = e.time;
+
+                    var allocated = new Object();
+                    allocated.y = e.allocated;
+                    allocated.t = e.time;
+
+                    var running = new Object();
+                    running.y = e.running;
+                    running.t = e.time;
+
+                    var error = new Object();
+                    error.y = e.error;
+                    error.t = e.time;
+
+                    var completed = new Object();
+                    completed.y = e.completed;
+                    completed.t = e.time;
+
+                    chart.data.datasets[0].data.push(total);
+                    chart.data.datasets[1].data.push(submitted);
+                    chart.data.datasets[2].data.push(allocated);
+                    chart.data.datasets[3].data.push(running);
+                    chart.data.datasets[4].data.push(error);
+                    chart.data.datasets[5].data.push(completed);
                 })
                 chart.update();
             return false;
@@ -279,6 +350,7 @@ function createStuff() {
     createChart();
     createTable();
     refreshTable();
+    refreshChart();
 
 }
 window.onload = createStuff;

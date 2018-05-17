@@ -15,6 +15,12 @@
  **/
 package io.confluent.kwq;
 
+import io.confluent.ksql.util.KsqlConfig;
+import io.confluent.kwq.util.KafkaTopicClientImpl;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+
+import java.util.Map;
 import java.util.Properties;
 
 public class KwqInstance {
@@ -39,21 +45,43 @@ public class KwqInstance {
   static KwqInstance singleton = null;
   public static KwqInstance getInstance(Properties propertes) {
     if (singleton == null) {
+
+      KafkaTopicClientImpl topicClient = getKafkaTopicClient(propertes);
+
+      Integer numPartitions = Integer.valueOf(propertes.getProperty("numPartitions", "3"));
+      Short numReplicas = Short.valueOf(propertes.getProperty("numReplicas", "1"));
+
       SimpleKwq kwq = new SimpleKwq(
+              topicClient,
               Integer.valueOf(propertes.getProperty("numPriorities", "9")),
               propertes.getProperty("prefix", "kwq"),
               propertes.getProperty("bootstrap.servers", "localhost:9092"),
-              Integer.valueOf(propertes.getProperty("numPartitions", "3")),
-              Short.valueOf(propertes.getProperty("numReplicas", "1"))
-      );
+              numPartitions, numReplicas
+              );
+
       kwq.start();
       singleton = new KwqInstance(
               kwq,
-                new TaskStatusImpl(propertes.getProperty("bootstrap.servers", "localhost:9092"))
+                new TaskStatusImpl(propertes.getProperty("bootstrap.servers", "localhost:9092"), topicClient, numPartitions, numReplicas)
         );
         return singleton;
     }
     return singleton;
+  }
+
+  public static KafkaTopicClientImpl getKafkaTopicClient(Properties propertes) {
+    Properties consumerConfig = new Properties();
+    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, propertes.getProperty("bootstrap.servers", "localhost:9092"));
+    consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, propertes.getProperty("prefix", "kwq"));
+    consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+
+    KsqlConfig ksqlConfig = new KsqlConfig(consumerConfig);
+
+    Map<String, Object> ksqlAdminClientConfigProps = ksqlConfig.getKsqlAdminClientConfigProps();
+
+    AdminClient adminClient = AdminClient.create(ksqlAdminClientConfigProps);
+    return new KafkaTopicClientImpl(adminClient);
   }
 
   public TaskStatus getTaskStatus() {

@@ -43,7 +43,7 @@ public class TaskSerDes implements Serde<Task>, Serializer<Task>, Deserializer<T
               jsonNode.get("tag").asText(),
               jsonNode.get("source").asText(),
               jsonNode.get("payload").asText(),
-              Task.Status.valueOf(jsonNode.get("status").asText()),
+              jsonNode.get("status").asText().equals("null") ? Task.Status.SUBMITTED :  Task.Status.valueOf(jsonNode.get("status").asText()),
               jsonNode.get("worker").asText(),
               jsonNode.get("workerEndpoint").asText(),
               jsonNode.get("runCount").asInt(),

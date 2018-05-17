@@ -21,7 +21,7 @@ import java.util.List;
 
 interface TaskStatus {
   void update(Task task);
-  TaskStats getStats();
+  List<TaskStats> getStats();
 
   List<Task> tasks();
 }

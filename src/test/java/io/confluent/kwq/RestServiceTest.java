@@ -44,8 +44,6 @@ public class RestServiceTest {
 
     RestServerMain.initialize();
     RestServerMain.start();
-
-
   }
 
   @After
@@ -58,7 +56,7 @@ public class RestServiceTest {
 
   @Test
   public void runServerForAbit() throws Exception {
-    Thread.sleep(600 * 1000);
+    Thread.sleep( 30 * 60 * 1000);
   }
 
 

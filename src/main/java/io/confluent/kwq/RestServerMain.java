@@ -124,7 +124,6 @@ public class RestServerMain {
     });
   }
 
-
   public static void start() {
     try {
       server.start();
@@ -133,6 +132,7 @@ public class RestServerMain {
       System.exit(1);
     }
   }
+
   public static void destroy() {
     server.destroy();
   }

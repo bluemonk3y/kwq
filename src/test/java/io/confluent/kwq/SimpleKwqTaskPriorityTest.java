@@ -35,7 +35,7 @@ public class SimpleKwqTaskPriorityTest {
     testHarness = new IntegrationTestHarness();
     testHarness.start();
 
-    kwq = new SimpleKwq(5, "KWQ", testHarness.embeddedKafkaCluster.bootstrapServers(), 1, (short)1);
+    kwq = new SimpleKwq(testHarness.getTopicClient(), 5, "KWQ", testHarness.embeddedKafkaCluster.bootstrapServers(), 1, (short)1);
 
     kwq.start();
   }
