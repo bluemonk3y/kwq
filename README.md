@@ -31,8 +31,8 @@ basic functionality of a message queue. The ability to retry tasks, use affinity
 of requests or queue prioritisation or the ability to scale out and run multiple instances. 
 And then, you need a way of viewing progress and track task metrics by certain bespoke attributes.
 
-Whats probably the most intersting aspect, is that when you break it down to this level of 
-granularity - a worker queue scheduler is a akin to those used to power FaaS like scheduling... interesting huh. The Task.payload could be used to run docker images
+What is probably the most interesting aspect, is that when you break it down to this level of 
+granularity - a worker queue scheduler is a akin to those used to power FaaS like scheduling... interesting. The Task.payload could be used to run docker images
 
 ## Features
 
