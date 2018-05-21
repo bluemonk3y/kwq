@@ -52,7 +52,7 @@ granularity - a worker queue scheduler is a akin to those used to power FaaS lik
 
 
 ## Architecture
-The general architecture contains a REST Endpoint for submitting or consuming tasks. Tasks can alternative by submitted directly onto a KWQ- priority topic.
+The general architecture contains a REST Endpoint for submitting or consuming tasks. Tasks can alternatively be submitted directly onto a KWQ-priority-X topic.
 Workers request tasks from the same REST endpoint and the scheduler (KWQ) updates the status in the Task Tracker. When a task is 'complete' or 'error' then the worker can notify the Task Tracker via the REST endpoint.
 
 ## Scheduler - KWQ
