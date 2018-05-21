@@ -20,6 +20,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -78,9 +82,10 @@ public class RestServiceTest {
 
     Client client = ClientBuilder.newClient();
     WebTarget target = client.target("http://localhost:8080").path("/kwq");
-    Task response = target.request(MediaType.APPLICATION_JSON_TYPE).get(Task.class);
+    String response = target.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
-    Assert.assertNotNull("Should have created KSWQ instance", response);
+    Assert.assertNotNull("Should have created KSWQ and returned a valid string", response);
+    assertThat(response, containsString("io.confluent.kwq.SimpleKwq@"));
   }
 
 
@@ -88,7 +93,7 @@ public class RestServiceTest {
   public void testSubmitTask() throws Exception {
 
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target("http://localhost:8080").path("api/kwq");
+    WebTarget target = client.target("http://localhost:8080").path("/kwq/submit");
 
 
     Task task = TaskDataProvider.data.values().iterator().next();
