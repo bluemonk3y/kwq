@@ -2,7 +2,7 @@
 
 ##### HPC Compute Grid Worker Dispatcher/Scheduler
 
-###### Note: this project is now moved to confluentinc/kwq - if you would like access pls contact me (neil@conflu3nt.io - and replace the number)
+##### Note: this project has moved to confluentinc/kwq - if you would like access pls contact me (neil@conflu3nt.io - and replace the number)
 
 Many large firms rely upon large scale compute power to farm out millions of calculations across thousands of machines. The general term is a 'compute grid' and well established commercial products include 'Tibco DataSynapse GridServer' or 'IBM Platform Symphony. There are also several well known open-source implementations: BOINC, Condor etc 
 
@@ -92,7 +92,11 @@ To change logging configuration - use the src/resources/log4j.properties file an
 > Kwq
 
 
-## Test driving the API via Swagger
+## Running a simulation
 
-> Accessible on http://localhost:9999/kwq
+1. > http://localhost:8080/swagger/index.html Run the task simulator and interact with the REST API
+
+2. > Execute kwq/simulate/{numberOfTasks}/{durationSeconds}/{numberOfWorkers}
+
+3. > Navigate to the UI to view throughput and status: http://localhost:8080/ui/index.html
 
