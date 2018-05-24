@@ -55,48 +55,65 @@ granularity - a worker queue scheduler is a akin to those used to power FaaS lik
 The general architecture contains a REST Endpoint for submitting or consuming tasks. Tasks can alternatively be submitted directly onto a KWQ-priority-X topic.
 Workers request tasks from the same REST endpoint and the scheduler (KWQ) updates the status in the Task Tracker. When a task is 'complete' or 'error' then the worker can notify the Task Tracker via the REST endpoint.
 
-## Scheduler - KWQ
+#### Scheduler - KWQ
 
 The worker queue is essentially a distributed priority queue that uses Kafka topics as individual priority queues, and services those with the highest priority first. 
 > See io.confluent.kwq.SimpleKwq.java
 
-## Task Tracker
+#### Task Tracker
 This component is a Kafka Stream processor that tracks when a where Tasks are 'Allocated, Completed or Error'
 > See io.confluent.kwq.TaskStatusImpl.java
 
+### Worker Simulator
+This component drives the KWQ & TaskStatus interfaces - consuming tasks and updating task status
+> See io.confluent.kwq.Simulator.java
+
+### API
+
+View the API by navigating to the Swagger endpoint: http://localhost:8080/swagger/index.html
+From there you can understand how to submit() tasks consume() tasks and update task status
+
 ## Get Running!
 
-Build the jar and the uber-jar in kwq/target
+Build the jar (and run tests)
 > mvn package
 
-Run the server against your brokers
-> java -Dbootstrap.servers=broker1:9092  -jar target/kwq-0.1-SNAPSHOT-jar-with-dependencies.jar
+OR
+> mvn clean package -DskipTests
 
-To view the logging configuration file being used run with the following 
+Expand **target/kwq-0.1-SNAPSHOT-dist.zip** to a destination folder and run the KwqRestServer against your brokers (defaults to localhost:9092)
+>java -cp "kwq-0.1-SNAPSHOT.jar:lib/*" -Dbootstrap.servers=localhost:9092 io.confluent.kwq.KwqRestServerMain
+
+Alternatively, modify the kwq.sh file (as above) apply execute permission and then execute it. 
+
+>chmod +x kwq.sh
+
+>./kwq.sh &
+
+To view the logging configuration file being used when starting KWQ:
 > -Dlog4j.debug=true
 
-To change logging configuration - use the src/resources/log4j.properties file and load via configuring location with the following  
-> -Dlog4j.file=<new-log-file>
+*Log files will appear in the ./log/ directory - see log4j.properties for configuration*
 
+## Within your IDE
 
- ## Endpoints
+> Run java class  io.confluent.kwq.KwqRestServerMain with System property: -Dkwq.resources.folder=./src/main/resources 
+
+ ## User interface and Endpoints
  - ADMIN UI: http://localhost:8080/ui/index.html
  - SWAGGER: http://localhost:8080/swagger/index.html Run the task simulator and interact with the REST API 
  - REST: http://localhost:8080/kwq 
  - OPEN-API-SPEC: http://localhost:8080/openapi.json
  
- ## API
-
-> Task
-
-> Kwq
-
 
 ## Running a simulation
 
-1. > http://localhost:8080/swagger/index.html Run the task simulator and interact with the REST API
+1. > Navigate to the Swagger interface
+**http://localhost:8080/swagger/index.html**
 
-2. > Execute kwq/simulate/{numberOfTasks}/{durationSeconds}/{numberOfWorkers}
+2. > Execute **kwq/simulate/{numberOfTasks}/{durationSeconds}/{numberOfWorkers}**
 
 3. > Navigate to the UI to view throughput and status: http://localhost:8080/ui/index.html
+
+4. > Check the kwq.log file for output from the simulator
 

@@ -23,15 +23,22 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
-public class RestServerMain {
+public class KwqRestServerMain {
 
-  // TODO: sort out the path and packaging into the jar
-  static String resourcesFolder = "/Users/neil/IdeaProjects/kwq/src/main/resources";
+  static Logger log = LoggerFactory.getLogger(KwqRestServerMain.class);
+
   private static Server server;
+
+  static String resourcesFolder =  System.getProperty("kwq.resources.folder", "./resources");
+  private static String boostrapServers =  System.getProperty("bootstrap.servers", "localhost:9092");
+  private static int port = Integer.getInteger("kwq.rest.port", 8080);
 
 
   public static void main(String[] args) throws Exception {
@@ -42,7 +49,12 @@ public class RestServerMain {
   }
 
   public static void initialize() throws MalformedURLException {
-    server = new Server(8080);
+    log.info("Initializing. \n Properties: \n\tkwq.rest.port = {}\n\tkwq.resources.folder = {}\n\tboostrap.servers = {}\n\t",
+            port, resourcesFolder, boostrapServers);
+
+    System.out.println("Path:" + new File(".").getAbsolutePath());
+
+    server = new Server(port);
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
     context.setContextPath("/");
@@ -84,24 +96,21 @@ public class RestServerMain {
     context.addServlet(holderDef,"/");
 
 
-    // TODO: setup properties properly
-    Properties properties = new Properties();
 
-    properties.put("bootstrap.servers", System.getProperty("bootstrap.servers", "localhost:9092"));
-
-    registerLifecycleHandler(apiServlet, properties);
+    registerLifecycleHandler(apiServlet);
   }
 
-  private static void registerLifecycleHandler(ServletHolder apiServlet, Properties properties) {
+  private static void registerLifecycleHandler(ServletHolder apiServlet) {
     apiServlet.addLifeCycleListener(new LifeCycle.Listener() {
       @Override
       public void lifeCycleStarting(LifeCycle lifeCycle) {
         try {
+          Properties properties = new Properties();
+          properties.put("bootstrap.servers", boostrapServers);
           KwqInstance.getInstance(properties);
-        } catch (Throwable badError) {
-          System.err.println("Fatal error during startup");
-          badError.printStackTrace();
-//          server.destroy();
+        } catch (Throwable t) {
+          log.error("Fatal error during startup", t);
+          t.printStackTrace();
           System.exit(-1);
         }
       }
@@ -128,6 +137,7 @@ public class RestServerMain {
     try {
       server.start();
     } catch (Exception ex) {
+      log.error("Failed to start", ex);
       ex.printStackTrace();
       System.exit(1);
     }
@@ -141,7 +151,7 @@ public class RestServerMain {
     try {
       server.join();
     } catch (Exception ex) {
-      ex.printStackTrace();
+      log.error("Failed to join", ex);
       System.exit(1);
     }
   }
@@ -149,8 +159,9 @@ public class RestServerMain {
   public static void stop() {
     try {
       server.stop();
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      log.error("Failed to stop", ex);
+      ex.printStackTrace();
     }
   }
 }

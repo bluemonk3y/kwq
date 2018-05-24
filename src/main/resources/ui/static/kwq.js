@@ -109,9 +109,14 @@ function createTable() {
                         }, {
                             title: "Duration",
                           "data" : "duration"
+                        }, {
+                            title: "Worker",
+                          "data" : "workerEndpoint"
+                        }, {
+                            title: "Meta",
+                          "data" : "meta"
                         }
-
-                         ]
+                     ]
     } );
     $('#refreshTable').click(function() {
         refreshTable();
@@ -177,8 +182,8 @@ function createChart() {
     var cfg = {
         type: 'bar',
         data: {
-        /**
-        {
+       // labels: ['total', 'submitted', 'allocated', 'running', 'error', 'completed'],
+        /** {
           "total": 0,
           "submitted": 0,
           "allocated": 0,
@@ -195,7 +200,8 @@ function createChart() {
                 pointRadius: 1,
                 fill: false,
                 lineTension: 0,
-                borderWidth: 2
+                borderWidth: 2,
+                cubicInterpolationMode: 'monotone'
             },
             {
                 label: 'Submitted',
@@ -207,7 +213,8 @@ function createChart() {
                         borderColor: window.chartColors.yellow,
 
                 lineTension: 0,
-                borderWidth: 2
+                borderWidth: 2,
+                cubicInterpolationMode: 'monotone'
             },{
                 label: 'Allocated',
                 data: data,
@@ -217,7 +224,8 @@ function createChart() {
                 backgroundColor: window.chartColors.orange,
                 borderColor: window.chartColors.orange,
                 lineTension: 0,
-                borderWidth: 2
+                borderWidth: 2,
+                cubicInterpolationMode: 'monotone'
             },{
                 label: 'Running',
                 data: data,
@@ -232,23 +240,25 @@ function createChart() {
                 label: 'Error',
                 data: data,
                 type: 'line',
-                pointRadius: 1,
+                pointRadius: 3,
                 fill: false,
                 backgroundColor: window.chartColors.red,
                 borderColor: window.chartColors.red,
                 lineTension: 0,
-                borderWidth: 2
+                borderWidth: 2,
+                cubicInterpolationMode: 'monotone'
             },
             {
                 label: 'Complete',
                 data: data,
                 type: 'line',
-                pointRadius: 1,
+                pointRadius: 2,
                 fill: false,
                 backgroundColor: window.chartColors.green,
                 borderColor: window.chartColors.green,
                 lineTension: 0,
-                borderWidth: 2
+                borderWidth: 2,
+                cubicInterpolationMode: 'monotone'
             }]
         },
         options: {
@@ -355,3 +365,7 @@ function createStuff() {
 }
 window.onload = createStuff;
 
+setInterval(function(){
+    refreshChart();
+    refreshTable();
+}, 10000);

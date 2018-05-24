@@ -46,6 +46,7 @@ public class TaskStatsCollector {
   private final StreamsConfig streamsConfig;
   private KafkaStreams streams;
   private final Queue<TaskStats> stats = new LockfreeConcurrentQueue<>();
+  private int windowDurationS;
 
   public TaskStatsCollector(final String taskStatusTopic, final StreamsConfig streamsConfig, final int windowDurationS){
     this.streamsConfig = streamsConfig;
@@ -53,6 +54,7 @@ public class TaskStatsCollector {
   }
 
   private Topology buildTopology(final String taskStatusTopic, final int windowDurationS) {
+    this.windowDurationS = windowDurationS;
     StreamsBuilder builder = new StreamsBuilder();
     KStream<String, Task> tasks = builder.stream(taskStatusTopic);
 
@@ -69,18 +71,18 @@ public class TaskStatsCollector {
      * We only want to view the final value of each window, and not every CDC event, so use a window threshold.
      */
     windowedTaskStatsKTable.toStream().foreach( (key, value) -> {
-      log.debug("Processing:{} time:{}", value, key.window().end());
-      if (currentWindowStats != null && key.window().end() != currentWindowStats.getTime()) {
-          log.debug("Adding:{} time:{}", currentWindowStats, key.window().end());
-          stats.add(currentWindowStats);
-          if (stats.size() > STATS_RETENTION) {
-            stats.remove();
-          }
-          // TODO: Publish stats onto a Topic for visualization via Grafana (store in elastic or influx)
-        }
-      currentWindowStats = value;
-      currentWindowStats.setTime(key.window().end());
-      }
+              log.debug("Processing:{} time:{}", value, key.window().end());
+              if (currentWindowStats != null && key.window().end() != currentWindowStats.getTime()) {
+                log.debug("Adding:{} time:{}", currentWindowStats, key.window().end());
+                stats.add(currentWindowStats);
+                if (stats.size() > STATS_RETENTION) {
+                  stats.remove();
+                }
+                // TODO: Publish stats onto a Topic for visualization via Grafana (store in elastic or influx)
+              }
+              currentWindowStats = value;
+              currentWindowStats.setTime(key.window().end());
+            }
     );
     return builder.build();
   }
@@ -94,8 +96,15 @@ public class TaskStatsCollector {
   }
 
   public List<TaskStats> getStats() {
+    if (currentWindowStats != null && currentWindowStats.getTime() < System.currentTimeMillis() - (windowDurationS * 1000)) {
+      stats.add(currentWindowStats);
+      currentWindowStats = null;
+    } else if (currentWindowStats == null) {
+      currentWindowStats = new TaskStats();
+      currentWindowStats.setTime(System.currentTimeMillis() - (windowDurationS * 1000));
+    }
     CopyOnWriteArrayList results = new CopyOnWriteArrayList<>(stats);
-    results.add(currentWindowStats);
+    if (currentWindowStats != null) results.add(currentWindowStats);
     Collections.reverse(results);
     return results;
   }

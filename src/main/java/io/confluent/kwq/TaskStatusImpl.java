@@ -34,7 +34,7 @@ public class TaskStatusImpl implements TaskStatus {
   private void startStreamsJobs(String bootstrapServers, int partitions, short replicationFactor) {
 
     topicClient.createTopic(TASK_STATUS_TOPIC, partitions, replicationFactor);
-    taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 10);
+    taskStatsCollector = new TaskStatsCollector(TASK_STATUS_TOPIC, streamsProperties(bootstrapServers, "total-events"), 5);
     taskStatsCollector.start();
   }
 

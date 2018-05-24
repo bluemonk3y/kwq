@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 
@@ -46,14 +45,14 @@ public class RestServiceTest {
 
     Thread.sleep( 500);
 
-    RestServerMain.initialize();
-    RestServerMain.start();
+    KwqRestServerMain.initialize();
+    KwqRestServerMain.start();
   }
 
   @After
   public void after() {
-    RestServerMain.stop();
-    RestServerMain.destroy();
+    KwqRestServerMain.stop();
+    KwqRestServerMain.destroy();
     testHarness.stop();
   }
 
