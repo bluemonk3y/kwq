@@ -2,7 +2,7 @@
 
 ##### HPC Compute Grid Worker Dispatcher/Scheduler
 
-##### Note: this project has moved to confluentinc/kwq - if you would like access pls contact me (neil@conflu3nt.io - and replace the number)
+##### Note: this project is functional but not complete, for example - pause is not implemented - feel free to contribute
 
 Many large firms rely upon large scale compute power to farm out millions of calculations across thousands of machines. The general term is a 'compute grid' and well established commercial products include 'Tibco DataSynapse GridServer' or 'IBM Platform Symphony. There are also several well known open-source implementations: BOINC, Condor etc 
 
