@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
@@ -48,7 +49,7 @@ public class KwqRestServerMain {
     destroy();
   }
 
-  public static void initialize() throws MalformedURLException {
+  public static void initialize() throws IOException {
     log.info("Initializing. \n Properties: \n\tkwq.rest.port = {}\n\tkwq.resources.folder = {}\n\tboostrap.servers = {}\n\t",
             port, resourcesFolder, boostrapServers);
 
